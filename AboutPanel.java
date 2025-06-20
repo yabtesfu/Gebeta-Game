@@ -1,0 +1,99 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class AboutPanel extends JPanel {
+    private Gebeta parent;
+    
+    public AboutPanel(Gebeta parent) {
+        this.parent = parent;
+        setLayout(null);
+        setBackground(new Color(245, 245, 220)); // Beige background
+        setupComponents();
+    }
+    
+    private void setupComponents() {
+        // Title
+        JLabel titleLabel = new JLabel("About Me");
+        titleLabel.setFont(new Font("Arial Black", Font.BOLD, 48));
+        titleLabel.setForeground(new Color(139, 69, 19)); // Saddle Brown
+        titleLabel.setBounds(450, 100, 300, 60);
+        add(titleLabel);
+        
+        // Student Information Panel
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBackground(new Color(255, 250, 240)); // Floral White
+        infoPanel.setBorder(BorderFactory.createLineBorder(new Color(139, 69, 19), 3));
+        infoPanel.setBounds(200, 200, 800, 400);
+        
+        // Student details
+        JLabel nameLabel = new JLabel("Made by: Yabetse Tesfaye");
+        nameLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        nameLabel.setForeground(new Color(70, 130, 180));
+        nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JLabel institutionLabel = new JLabel("Student at American College of Technology");
+        institutionLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        institutionLabel.setForeground(new Color(70, 130, 180));
+        institutionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JLabel programLabel = new JLabel("Computer Science");
+        programLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        programLabel.setForeground(new Color(70, 130, 180));
+        programLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JLabel yearLabel = new JLabel("2nd Year Student");
+        yearLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        yearLabel.setForeground(new Color(70, 130, 180));
+        yearLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JLabel idLabel = new JLabel("ID: 177/BSC-B6/2023");
+        idLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        idLabel.setForeground(new Color(70, 130, 180));
+        idLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Add some spacing
+        infoPanel.add(Box.createVerticalStrut(30));
+        infoPanel.add(nameLabel);
+        infoPanel.add(Box.createVerticalStrut(20));
+        infoPanel.add(institutionLabel);
+        infoPanel.add(Box.createVerticalStrut(15));
+        infoPanel.add(programLabel);
+        infoPanel.add(Box.createVerticalStrut(15));
+        infoPanel.add(yearLabel);
+        infoPanel.add(Box.createVerticalStrut(15));
+        infoPanel.add(idLabel);
+        infoPanel.add(Box.createVerticalStrut(30));
+        
+        add(infoPanel);
+        
+        // Back to Menu Button
+        JButton backButton = createStyledButton("Back to Menu", new Color(139, 69, 19));
+        backButton.setBounds(500, 650, 200, 50);
+        backButton.addActionListener(e -> parent.showPanel("INTRO"));
+        add(backButton);
+    }
+    
+    private JButton createStyledButton(String text, Color backgroundColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 18));
+        button.setBackground(backgroundColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        
+        // Add hover effect
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(backgroundColor.brighter());
+            }
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(backgroundColor);
+            }
+        });
+        
+        return button;
+    }
+} 
