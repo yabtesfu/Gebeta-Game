@@ -12,14 +12,14 @@ public class Gebeta extends JFrame {
     private HelpPanel helpPanel;
     
     public Gebeta() {
-        setTitle("ገበጣ - ባህላዊ የጨዋታ ሰሌዳ");
+        setTitle("Gebeta - Traditional Ethiopian Board Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
         setLocationRelativeTo(null);
         setResizable(true);
         
-        UIManager.put("OptionPane.messageFont", new Font("Nyala", Font.PLAIN, 18));
-        UIManager.put("OptionPane.buttonFont", new Font("Nyala", Font.BOLD, 16));
+        UIManager.put("OptionPane.messageFont", new Font("Arial", Font.PLAIN, 18));
+        UIManager.put("OptionPane.buttonFont", new Font("Arial", Font.BOLD, 16));
         
         
         cardLayout = new CardLayout();

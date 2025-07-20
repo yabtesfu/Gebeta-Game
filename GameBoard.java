@@ -148,11 +148,11 @@ public class GameBoard {
             int player2Score = getPlayerStore(1).getStoneCount();
             
             if (player1Score > player2Score) {
-                winner = "ተጫዋች 1 አሸንፏል!";
+                winner = "Player 1 Wins!";
             } else if (player2Score > player1Score) {
-                winner = "ተጫዋች 2 አሸንፏል!";
+                winner = "Player 2 Wins!";
             } else {
-                winner = "እኩል ናቸው!";
+                winner = "It's a Tie!";
             }
         }
     }
@@ -173,19 +173,19 @@ public class GameBoard {
         
        
         g2d.setColor(Color.BLACK);
-        g2d.setFont(new Font("Nyala", Font.BOLD, 16));
+        g2d.setFont(new Font("Arial", Font.BOLD, 16));
         FontMetrics fm = g2d.getFontMetrics();
 
       
         Pit player1Store = getPlayerStore(0);
-        String p1Score = "ውጤት: " + player1Store.getStoneCount();
+        String p1Score = "Score: " + player1Store.getStoneCount();
         int p1x = player1Store.getX() + (player1Store.getWidth() - fm.stringWidth(p1Score)) / 2;
         int p1y = player1Store.getY() + player1Store.getHeight() / 2;
         g2d.drawString(p1Score, p1x, p1y);
 
         
         Pit player2Store = getPlayerStore(1);
-        String p2Score = "ውጤት: " + player2Store.getStoneCount();
+        String p2Score = "Score: " + player2Store.getStoneCount();
         int p2x = player2Store.getX() + (player2Store.getWidth() - fm.stringWidth(p2Score)) / 2;
         int p2y = player2Store.getY() + player2Store.getHeight() / 2;
         g2d.drawString(p2Score, p2x, p2y);
@@ -196,7 +196,7 @@ public class GameBoard {
             g2d.fillRect(0, 0, 1200, 800);
             
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Nyala", Font.BOLD, 36));
+            g2d.setFont(new Font("Arial", Font.BOLD, 36));
             int textX = 600 - fm.stringWidth(winner) / 2;
             int textY = 400;
             g2d.drawString(winner, textX, textY);

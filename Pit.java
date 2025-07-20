@@ -93,7 +93,7 @@ public class Pit {
         }
         if (!isStore) {
             g2d.setColor(Color.BLACK);
-            g2d.setFont(new Font("Nyala", Font.BOLD, 16));
+            g2d.setFont(new Font("Arial", Font.BOLD, 16));
             String count = String.valueOf(stones.size());
             FontMetrics fm = g2d.getFontMetrics();
             int textX = x + width/2 - fm.stringWidth(count)/2;

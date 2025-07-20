@@ -29,8 +29,8 @@ public class IntroPanel extends JPanel {
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
         contentPanel.add(Box.createVerticalStrut(100));
-        JLabel titleLabel = new JLabel("ገበጣ");
-        titleLabel.setFont(new Font("Nyala", Font.BOLD, 72));
+        JLabel titleLabel = new JLabel("GEBETA");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 72));
         titleLabel.setForeground(new Color(139, 69, 19));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(titleLabel);
@@ -38,28 +38,28 @@ public class IntroPanel extends JPanel {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         buttonPanel.setOpaque(false);
-        JButton playButton = createStyledButton("ጨዋታ ጀምር", new Color(34, 139, 34));
+        JButton playButton = createStyledButton("Start Game", new Color(34, 139, 34));
         playButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         playButton.setMaximumSize(new Dimension(200, 50));
         playButton.setPreferredSize(new Dimension(200, 50));
         playButton.addActionListener(e -> parent.showPanel("GAME"));
         buttonPanel.add(playButton);
         buttonPanel.add(Box.createVerticalStrut(20));
-        JButton aboutButton = createStyledButton("ስለ እኔ", new Color(70, 130, 180));
+        JButton aboutButton = createStyledButton("About", new Color(70, 130, 180));
         aboutButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         aboutButton.setMaximumSize(new Dimension(200, 50));
         aboutButton.setPreferredSize(new Dimension(200, 50));
         aboutButton.addActionListener(e -> parent.showPanel("ABOUT"));
         buttonPanel.add(aboutButton);
         buttonPanel.add(Box.createVerticalStrut(20));
-        JButton helpButton = createStyledButton("እርዳታ", new Color(218, 165, 32));
+        JButton helpButton = createStyledButton("Help", new Color(218, 165, 32));
         helpButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         helpButton.setMaximumSize(new Dimension(200, 50));
         helpButton.setPreferredSize(new Dimension(200, 50));
         helpButton.addActionListener(e -> parent.showPanel("HELP"));
         buttonPanel.add(helpButton);
         buttonPanel.add(Box.createVerticalStrut(20));
-        JButton exitButton = createStyledButton("ውጣ", new Color(220, 20, 60));
+        JButton exitButton = createStyledButton("Exit", new Color(220, 20, 60));
         exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         exitButton.setMaximumSize(new Dimension(200, 50));
         exitButton.setPreferredSize(new Dimension(200, 50));
@@ -75,7 +75,7 @@ public class IntroPanel extends JPanel {
     
     private JButton createStyledButton(String text, Color backgroundColor) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Nyala", Font.BOLD, 18));
+        button.setFont(new Font("Arial", Font.BOLD, 18));
         button.setBackground(backgroundColor);
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);

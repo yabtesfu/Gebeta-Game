@@ -23,12 +23,12 @@ public class GamePanel extends JPanel {
         topPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
         topPanel.setBackground(new Color(245, 245, 220));
         
-        backButton = createStyledButton("ወደ ዝርዝር ተመለስ", new Color(139, 69, 19));
+        backButton = createStyledButton("Back to Menu", new Color(139, 69, 19));
         backButton.setPreferredSize(new Dimension(150, 40));
         backButton.addActionListener(e -> parent.showPanel("INTRO"));
         topPanel.add(backButton);
         
-        newGameButton = createStyledButton("አዲስ ጨዋታ", new Color(34, 139, 34));
+        newGameButton = createStyledButton("New Game", new Color(34, 139, 34));
         newGameButton.setPreferredSize(new Dimension(150, 40));
         newGameButton.addActionListener(e -> {
             gameBoard.resetGame();
@@ -36,7 +36,7 @@ public class GamePanel extends JPanel {
         });
         topPanel.add(newGameButton);
         
-        helpButton = createStyledButton("እርዳታ", new Color(70, 130, 180));
+        helpButton = createStyledButton("Help", new Color(70, 130, 180));
         helpButton.setPreferredSize(new Dimension(100, 40));
         helpButton.addActionListener(e -> parent.showPanel("HELP"));
         topPanel.add(helpButton);
@@ -82,8 +82,8 @@ public class GamePanel extends JPanel {
                                 SwingUtilities.invokeLater(() -> {
                                     int choice = JOptionPane.showConfirmDialog(
                                         GamePanel.this,
-                                        gameBoard.getWinner() + "\nእንደገና መጫወት ይፈልጋሉ?",
-                                        "ጨዋታው አብቅቷል",
+                                        gameBoard.getWinner() + "\nDo you want to play again?",
+                                        "Game Over",
                                         JOptionPane.YES_NO_OPTION
                                     );
                                     if (choice == JOptionPane.YES_OPTION) {
@@ -95,8 +95,8 @@ public class GamePanel extends JPanel {
                         } else {
                             JOptionPane.showMessageDialog(
                                 GamePanel.this,
-                                "የተሳሳተ እንቅስቃሴ! እባክዎ ትክክለኛውን ጉድጓድ ይምረጡ።",
-                                "የተሳሳተ እንቅስቃሴ",
+                                "Invalid move! Please select a valid pit.",
+                                "Invalid Move",
                                 JOptionPane.WARNING_MESSAGE
                             );
                         }
@@ -129,7 +129,7 @@ public class GamePanel extends JPanel {
     
     private JButton createStyledButton(String text, Color backgroundColor) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Nyala", Font.BOLD, 14));
+        button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setBackground(backgroundColor);
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
@@ -148,12 +148,12 @@ public class GamePanel extends JPanel {
     
     private void drawGameInfo(Graphics2D g2d) {
         g2d.setColor(new Color(139, 69, 19));
-        g2d.setFont(new Font("Nyala", Font.BOLD, 28));
+        g2d.setFont(new Font("Arial", Font.BOLD, 28));
         int currentPlayer = gameBoard.getCurrentPlayer();
-        String playerText = "የአሁኑ ተጫዋች: " + (currentPlayer + 1);
+        String playerText = "Current Player: " + (currentPlayer + 1);
         Color playerColor = currentPlayer == 0 ? new Color(34, 139, 34) : new Color(70, 130, 180);
         g2d.setColor(playerColor);
-        g2d.setFont(new Font("Nyala", Font.BOLD, 20));
+        g2d.setFont(new Font("Arial", Font.BOLD, 20));
         g2d.drawString(playerText, 800, 60);
         g2d.setColor(playerColor);
         g2d.fillOval(780, 45, 15, 15);

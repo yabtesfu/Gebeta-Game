@@ -74,7 +74,7 @@ public class AboutPanel extends JPanel {
         contentPanel.add(Box.createVerticalStrut(50));
         
     
-        JButton backButton = createStyledButton("ወደ ዝርዝር ተመለስ", new Color(139, 69, 19));
+        JButton backButton = createStyledButton("Back to Menu", new Color(139, 69, 19));
         backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         backButton.setMaximumSize(new Dimension(200, 50));
         backButton.setPreferredSize(new Dimension(200, 50));
@@ -94,7 +94,7 @@ public class AboutPanel extends JPanel {
     
     private JButton createStyledButton(String text, Color backgroundColor) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Nyala", Font.BOLD, 18));
+        button.setFont(new Font("Arial", Font.BOLD, 18));
         button.setBackground(backgroundColor);
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
