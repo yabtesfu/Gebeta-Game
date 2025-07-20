@@ -5,10 +5,10 @@ A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancal
 ## About the Developer
 
 **Made by:** Yabetse Tesfaye  
-**Institution:** American College of Technology  
-**Program:** Computer Science  
-**Year:** 2nd Year Student  
-**ID:** 177/BSC-B6/2023
+**Institution:** Addis Ababa Institute of Technology  
+**Program:** Software Engineer 
+**Year:** 5th Year Student  
+**ID:** UGR/31352/15
 
 ## Game Features
 

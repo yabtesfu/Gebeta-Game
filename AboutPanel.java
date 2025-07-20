@@ -36,22 +36,22 @@ public class AboutPanel extends JPanel {
         nameLabel.setForeground(new Color(70, 130, 180));
         nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel institutionLabel = new JLabel("Student at American College of Technology");
+        JLabel institutionLabel = new JLabel("Student at Addis Ababa Institute of Technology");
         institutionLabel.setFont(new Font("Arial", Font.BOLD, 20));
         institutionLabel.setForeground(new Color(70, 130, 180));
         institutionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel programLabel = new JLabel("Computer Science");
+        JLabel programLabel = new JLabel("Software Engineer");
         programLabel.setFont(new Font("Arial", Font.BOLD, 20));
         programLabel.setForeground(new Color(70, 130, 180));
         programLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel yearLabel = new JLabel("2nd Year Student");
+        JLabel yearLabel = new JLabel("5th Year Student");
         yearLabel.setFont(new Font("Arial", Font.BOLD, 20));
         yearLabel.setForeground(new Color(70, 130, 180));
         yearLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel idLabel = new JLabel("ID: 177/BSC-B6/2023");
+        JLabel idLabel = new JLabel("ID: UGR/31352/15");
         idLabel.setFont(new Font("Arial", Font.BOLD, 20));
         idLabel.setForeground(new Color(70, 130, 180));
         idLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
