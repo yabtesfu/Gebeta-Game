@@ -12,13 +12,16 @@ public class Gebeta extends JFrame {
     private HelpPanel helpPanel;
     
     public Gebeta() {
-        setTitle("Gebeta - Traditional Mancala Game");
+        setTitle("ገበጣ - ባህላዊ የጨዋታ ሰሌዳ");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
         setLocationRelativeTo(null);
         setResizable(true);
         
-        // Initialize components
+        UIManager.put("OptionPane.messageFont", new Font("Nyala", Font.PLAIN, 18));
+        UIManager.put("OptionPane.buttonFont", new Font("Nyala", Font.BOLD, 16));
+        
+        
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
         
@@ -27,7 +30,7 @@ public class Gebeta extends JFrame {
         aboutPanel = new AboutPanel(this);
         helpPanel = new HelpPanel(this);
         
-        // Add panels to main panel
+       
         mainPanel.add(introPanel, "INTRO");
         mainPanel.add(gamePanel, "GAME");
         mainPanel.add(aboutPanel, "ABOUT");
@@ -35,12 +38,15 @@ public class Gebeta extends JFrame {
         
         add(mainPanel);
         
-        // Show intro panel first
+    
         cardLayout.show(mainPanel, "INTRO");
     }
     
     public void showPanel(String panelName) {
         cardLayout.show(mainPanel, panelName);
+        if (panelName.equals("GAME")) {
+            gamePanel.resetGame();
+        }
     }
     
     public static void main(String[] args) {

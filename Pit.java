@@ -6,7 +6,7 @@ public class Pit {
     private int x, y, width, height;
     private List<Stone> stones;
     private boolean isStore;
-    private int player; // 0 for player 1, 1 for player 2
+    private int player;
     
     public Pit(int x, int y, int width, int height, boolean isStore, int player) {
         this.x = x;
@@ -59,19 +59,15 @@ public class Pit {
     
     private void updateStonePositions() {
         if (stones.isEmpty()) return;
-        
         if (isStore) {
-            // Arrange stones in a vertical column for stores
             int stoneSpacing = Math.min(15, height / (stones.size() + 1));
             for (int i = 0; i < stones.size(); i++) {
                 int stoneY = y + height/2 + (i - stones.size()/2) * stoneSpacing;
                 stones.get(i).setPosition(x + width/2, stoneY);
             }
         } else {
-            // Arrange stones in a grid for regular pits
             int maxStonesPerRow = 4;
             int stoneSpacing = Math.min(12, Math.min(width / maxStonesPerRow, height / ((stones.size() + maxStonesPerRow - 1) / maxStonesPerRow)));
-            
             for (int i = 0; i < stones.size(); i++) {
                 int row = i / maxStonesPerRow;
                 int col = i % maxStonesPerRow;
@@ -83,28 +79,21 @@ public class Pit {
     }
     
     public void draw(Graphics2D g2d) {
-        // Draw pit background
         if (isStore) {
-            g2d.setColor(new Color(210, 180, 140)); // Tan
+            g2d.setColor(new Color(210, 180, 140));
         } else {
-            g2d.setColor(new Color(245, 222, 179)); // Wheat
+            g2d.setColor(new Color(245, 222, 179));
         }
         g2d.fillOval(x, y, width, height);
-        
-        // Draw pit border
-        g2d.setColor(new Color(139, 69, 19)); // Saddle Brown
+        g2d.setColor(new Color(139, 69, 19));
         g2d.setStroke(new BasicStroke(3));
         g2d.drawOval(x, y, width, height);
-        
-        // Draw stones
         for (Stone stone : stones) {
             stone.draw(g2d);
         }
-        
-        // Draw stone count
         if (!isStore) {
             g2d.setColor(Color.BLACK);
-            g2d.setFont(new Font("Arial", Font.BOLD, 16));
+            g2d.setFont(new Font("Nyala", Font.BOLD, 16));
             String count = String.valueOf(stones.size());
             FontMetrics fm = g2d.getFontMetrics();
             int textX = x + width/2 - fm.stringWidth(count)/2;

@@ -7,27 +7,30 @@ public class AboutPanel extends JPanel {
     
     public AboutPanel(Gebeta parent) {
         this.parent = parent;
-        setLayout(null);
-        setBackground(new Color(245, 245, 220)); // Beige background
+        setLayout(new BorderLayout());
+        setBackground(new Color(245, 245, 220)); 
         setupComponents();
     }
     
     private void setupComponents() {
-        // Title
-        JLabel titleLabel = new JLabel("About Me");
-        titleLabel.setFont(new Font("Arial Black", Font.BOLD, 48));
-        titleLabel.setForeground(new Color(139, 69, 19)); // Saddle Brown
-        titleLabel.setBounds(450, 100, 300, 60);
-        add(titleLabel);
         
-        // Student Information Panel
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBackground(new Color(245, 245, 220));
+        
+        
+        contentPanel.add(Box.createVerticalStrut(100));
+        
+       
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(new Color(255, 250, 240)); // Floral White
         infoPanel.setBorder(BorderFactory.createLineBorder(new Color(139, 69, 19), 3));
-        infoPanel.setBounds(200, 200, 800, 400);
+        infoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        infoPanel.setMaximumSize(new Dimension(800, 400));
+        infoPanel.setPreferredSize(new Dimension(800, 400));
         
-        // Student details
+     
         JLabel nameLabel = new JLabel("Made by: Yabetse Tesfaye");
         nameLabel.setFont(new Font("Arial", Font.BOLD, 24));
         nameLabel.setForeground(new Color(70, 130, 180));
@@ -52,8 +55,7 @@ public class AboutPanel extends JPanel {
         idLabel.setFont(new Font("Arial", Font.BOLD, 20));
         idLabel.setForeground(new Color(70, 130, 180));
         idLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Add some spacing
+      
         infoPanel.add(Box.createVerticalStrut(30));
         infoPanel.add(nameLabel);
         infoPanel.add(Box.createVerticalStrut(20));
@@ -66,25 +68,39 @@ public class AboutPanel extends JPanel {
         infoPanel.add(idLabel);
         infoPanel.add(Box.createVerticalStrut(30));
         
-        add(infoPanel);
+        contentPanel.add(infoPanel);
         
-        // Back to Menu Button
-        JButton backButton = createStyledButton("Back to Menu", new Color(139, 69, 19));
-        backButton.setBounds(500, 650, 200, 50);
+
+        contentPanel.add(Box.createVerticalStrut(50));
+        
+    
+        JButton backButton = createStyledButton("ወደ ዝርዝር ተመለስ", new Color(139, 69, 19));
+        backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        backButton.setMaximumSize(new Dimension(200, 50));
+        backButton.setPreferredSize(new Dimension(200, 50));
         backButton.addActionListener(e -> parent.showPanel("INTRO"));
-        add(backButton);
+        contentPanel.add(backButton);
+        
+       
+        contentPanel.add(Box.createVerticalGlue());
+        
+     
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setOpaque(false);
+        centerPanel.add(contentPanel, BorderLayout.CENTER);
+        
+        add(centerPanel, BorderLayout.CENTER);
     }
     
     private JButton createStyledButton(String text, Color backgroundColor) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 18));
+        button.setFont(new Font("Nyala", Font.BOLD, 18));
         button.setBackground(backgroundColor);
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setOpaque(true);
-        
-        // Add hover effect
+      
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 button.setBackground(backgroundColor.brighter());

@@ -18,23 +18,21 @@ public class GameBoard {
     private void initializeBoard() {
         pits.clear();
 
-        // Player 1's pits (indices 0-5)
         for (int i = 0; i < 6; i++) {
             pits.add(new Pit(200 + i * 120, 400, 100, 100, false, 0));
         }
 
-        // Player 1's store (index 6, right)
+        
         pits.add(new Pit(1070, 200, 80, 300, true, 0));
 
-        // Player 2's pits (indices 7-12)
+      
         for (int i = 5; i >= 0; i--) {
             pits.add(new Pit(200 + i * 120, 200, 100, 100, false, 1));
         }
 
-        // Player 2's store (index 13, left)
         pits.add(new Pit(50, 200, 80, 300, true, 1));
 
-        // Add initial stones
+        
         for (Pit pit : pits) {
             if (!pit.isStore()) {
                 for (int i = 0; i < 4; i++) {
@@ -56,7 +54,7 @@ public class GameBoard {
         int stoneCount = stones.size();
         int currentIndex = pitIndex;
 
-        // Distribute stones
+       
         for (int i = 0; i < stoneCount; i++) {
             currentIndex = (currentIndex + 1) % 14;
             if (currentIndex == opponentStoreIndex) {
@@ -64,7 +62,7 @@ public class GameBoard {
             }
         }
         
-        // Redo distribution to actually move stones, now that we know the last pit
+        
         int dropIndex = pitIndex;
         for (Stone stone : stones) {
             dropIndex = (dropIndex + 1) % 14;
@@ -76,7 +74,7 @@ public class GameBoard {
 
         Pit lastPit = pits.get(dropIndex);
 
-        // Capture rule
+        
         if (!lastPit.isStore() && lastPit.getPlayer() == currentPlayer && lastPit.getStoneCount() == 1) {
             int oppositeIndex = getOppositePitIndex(dropIndex);
             if (oppositeIndex != -1) {
@@ -91,7 +89,7 @@ public class GameBoard {
             }
         }
 
-        // Extra turn rule
+        
         boolean extraTurn = lastPit.isStore() && lastPit.getPlayer() == currentPlayer;
         checkGameOver();
         if (!gameOver && !extraTurn) {
@@ -105,12 +103,12 @@ public class GameBoard {
     }
     
     private int getOppositePitIndex(int pitIndex) {
-        if (pitIndex >= 0 && pitIndex <= 5) { // P1 pits
+        if (pitIndex >= 0 && pitIndex <= 5) {
             return 12 - pitIndex;
-        } else if (pitIndex >= 7 && pitIndex <= 12) { // P2 pits
+        } else if (pitIndex >= 7 && pitIndex <= 12) { 
             return 12 - pitIndex;
         }
-        return -1; // Should not happen for a regular pit
+        return -1;
     }
     
     private Pit getPlayerStore(int player) {
@@ -145,61 +143,60 @@ public class GameBoard {
                 }
             }
             
-            // Determine winner
+           
             int player1Score = getPlayerStore(0).getStoneCount();
             int player2Score = getPlayerStore(1).getStoneCount();
             
             if (player1Score > player2Score) {
-                winner = "Player 1 wins!";
+                winner = "ተጫዋች 1 አሸንፏል!";
             } else if (player2Score > player1Score) {
-                winner = "Player 2 wins!";
+                winner = "ተጫዋች 2 አሸንፏል!";
             } else {
-                winner = "It's a tie!";
+                winner = "እኩል ናቸው!";
             }
         }
     }
     
     public void draw(Graphics2D g2d) {
-        // Draw board background
-        g2d.setColor(new Color(245, 245, 220)); // Beige
+        
+        g2d.setColor(new Color(245, 245, 220));
         g2d.fillRect(0, 0, 1200, 800);
         
-        // Draw board border
-        g2d.setColor(new Color(139, 69, 19)); // Saddle Brown
-        g2d.setStroke(new BasicStroke(5));
-        g2d.drawRect(40, 180, 1120, 340);
         
-        // Draw pits
+        g2d.setColor(new Color(139, 69, 19));
+        g2d.setStroke(new BasicStroke(5));
+        g2d.drawRect(40, 180, 1120, 390);
+        
         for (Pit pit : pits) {
             pit.draw(g2d);
         }
         
-        // Draw player scores on the stores
+       
         g2d.setColor(Color.BLACK);
-        g2d.setFont(new Font("Arial", Font.BOLD, 16));
+        g2d.setFont(new Font("Nyala", Font.BOLD, 16));
         FontMetrics fm = g2d.getFontMetrics();
 
-        // Player 1 Score (left store)
+      
         Pit player1Store = getPlayerStore(0);
-        String p1Score = "Score: " + player1Store.getStoneCount();
+        String p1Score = "ውጤት: " + player1Store.getStoneCount();
         int p1x = player1Store.getX() + (player1Store.getWidth() - fm.stringWidth(p1Score)) / 2;
         int p1y = player1Store.getY() + player1Store.getHeight() / 2;
         g2d.drawString(p1Score, p1x, p1y);
 
-        // Player 2 Score (right store)
+        
         Pit player2Store = getPlayerStore(1);
-        String p2Score = "Score: " + player2Store.getStoneCount();
+        String p2Score = "ውጤት: " + player2Store.getStoneCount();
         int p2x = player2Store.getX() + (player2Store.getWidth() - fm.stringWidth(p2Score)) / 2;
         int p2y = player2Store.getY() + player2Store.getHeight() / 2;
         g2d.drawString(p2Score, p2x, p2y);
         
-        // Draw game over message
+       
         if (gameOver) {
             g2d.setColor(new Color(0, 0, 0, 150));
             g2d.fillRect(0, 0, 1200, 800);
             
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Arial", Font.BOLD, 36));
+            g2d.setFont(new Font("Nyala", Font.BOLD, 36));
             int textX = 600 - fm.stringWidth(winner) / 2;
             int textY = 400;
             g2d.drawString(winner, textX, textY);

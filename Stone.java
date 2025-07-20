@@ -8,13 +8,12 @@ public class Stone {
     public Stone(int x, int y) {
         this.x = x;
         this.y = y;
-        // Random stone colors for visual appeal
         Color[] colors = {
-            new Color(139, 69, 19),   // Saddle Brown
-            new Color(160, 82, 45),   // Sienna
-            new Color(205, 133, 63),  // Peru
-            new Color(210, 105, 30),  // Chocolate
-            new Color(244, 164, 96)   // Sandy Brown
+            new Color(139, 69, 19),
+            new Color(160, 82, 45),
+            new Color(205, 133, 63),
+            new Color(210, 105, 30),
+            new Color(244, 164, 96)
         };
         this.color = colors[(int)(Math.random() * colors.length)];
     }
