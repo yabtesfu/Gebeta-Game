@@ -48,6 +48,17 @@ public class Gebeta extends JFrame {
             gamePanel.resetGame();
         }
     }
+
+    /**
+     * Starts a fresh game in the chosen mode and switches to the board.
+     *
+     * @param vsComputer true for a game against the AI, false for two human players
+     * @param aiDepth    minimax search depth for the AI (ignored when vsComputer is false)
+     */
+    public void startGame(boolean vsComputer, int aiDepth) {
+        gamePanel.startGame(vsComputer, aiDepth);
+        cardLayout.show(mainPanel, "GAME");
+    }
     
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

@@ -38,12 +38,20 @@ public class IntroPanel extends JPanel {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         buttonPanel.setOpaque(false);
-        JButton playButton = createStyledButton("Start Game", new Color(34, 139, 34));
-        playButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        playButton.setMaximumSize(new Dimension(200, 50));
-        playButton.setPreferredSize(new Dimension(200, 50));
-        playButton.addActionListener(e -> parent.showPanel("GAME"));
-        buttonPanel.add(playButton);
+        JButton twoPlayerButton = createStyledButton("Two Players", new Color(34, 139, 34));
+        twoPlayerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        twoPlayerButton.setMaximumSize(new Dimension(200, 50));
+        twoPlayerButton.setPreferredSize(new Dimension(200, 50));
+        twoPlayerButton.addActionListener(e -> parent.startGame(false, 0));
+        buttonPanel.add(twoPlayerButton);
+        buttonPanel.add(Box.createVerticalStrut(20));
+
+        JButton vsComputerButton = createStyledButton("Play vs Computer", new Color(178, 34, 34));
+        vsComputerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        vsComputerButton.setMaximumSize(new Dimension(200, 50));
+        vsComputerButton.setPreferredSize(new Dimension(200, 50));
+        vsComputerButton.addActionListener(e -> chooseDifficultyAndPlay());
+        buttonPanel.add(vsComputerButton);
         buttonPanel.add(Box.createVerticalStrut(20));
         JButton aboutButton = createStyledButton("About", new Color(70, 130, 180));
         aboutButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -73,6 +81,29 @@ public class IntroPanel extends JPanel {
         add(centerPanel, BorderLayout.CENTER);
     }
     
+    /** Asks the player for a difficulty, then starts a game against the AI. */
+    private void chooseDifficultyAndPlay() {
+        Object[] options = {"Easy", "Medium", "Hard"};
+        int choice = JOptionPane.showOptionDialog(
+            this,
+            "Choose the computer's difficulty:",
+            "Play vs Computer",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            options,
+            options[1]
+        );
+        int depth;
+        switch (choice) {
+            case 0: depth = 1; break;  // Easy   — greedy, one move ahead
+            case 1: depth = 5; break;  // Medium — a few moves ahead
+            case 2: depth = 9; break;  // Hard   — deep search
+            default: return;           // dialog closed, stay on the menu
+        }
+        parent.startGame(true, depth);
+    }
+
     private JButton createStyledButton(String text, Color backgroundColor) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 18));
