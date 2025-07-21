@@ -19,6 +19,13 @@
 *.tar.gz
 *.rar
 
+# ...but the Gradle wrapper jar MUST be committed so `./gradlew` and CI work.
+!gradle/wrapper/gradle-wrapper.jar
+
+# Gradle build output
+.gradle/
+build/
+
 # Virtual machine crash logs
 hs_err_pid*
 

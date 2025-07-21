@@ -1,6 +1,8 @@
 # Gebeta - Traditional Ethiopian Mancala Game
 
-A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancala), created as an Object-Oriented Programming project.
+[![CI](https://github.com/yabtesfu/Gebeta-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/yabtesfu/Gebeta-Game/actions/workflows/ci.yml)
+
+A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancala), featuring an AI opponent (minimax with alpha-beta pruning), a fully unit-tested rules engine, and a Gradle build with continuous integration.
 
 ## About the Developer
 
@@ -28,26 +30,33 @@ A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancal
   - Help page with game instructions and tutorial video link
 - **Enhanced User Experience:** Hover effects, "Computer is thinking…" status, responsive design
 - **Game Management:** New game, reset, and navigation features
-- **Unit-tested rules engine:** A dependency-free test suite verifies the game rules
+- **Unit-tested rules engine:** A JUnit 5 test suite verifies the game rules, run on every push by CI
 
-## How to Compile and Run
+## How to Build and Run
 
-### Prerequisites
+The project uses **Gradle** via the included wrapper, so you don't need Gradle
+installed — only a JDK (17 or newer).
 
-- Java Development Kit (JDK) 8 or higher
-- The background image file: `Background Image.png` (must be in the same directory)
-
-### Compilation
+### Run the game
 
 ```bash
-javac *.java
+./gradlew run
 ```
 
-### Running the Game
+### Run the tests
 
 ```bash
-java Gebeta
+./gradlew test
 ```
+
+### Build everything (compile + test + package)
+
+```bash
+./gradlew build
+```
+
+Continuous integration (GitHub Actions, see [.github/workflows/ci.yml](.github/workflows/ci.yml))
+compiles the project and runs the full test suite on every push and pull request.
 
 ## Game Rules
 
@@ -66,25 +75,33 @@ java Gebeta
 - **Help:** Access game instructions and tutorial video
 - **Back to Menu:** Return to the main menu
 
-## Running the Tests
+## Testing
 
-The rules engine has its own test suite that needs no external libraries — just a JDK:
+The rules engine has a JUnit 5 suite covering sowing, captures, extra turns,
+illegal-move rejection, and end-of-game collection:
 
 ```bash
-javac MancalaState.java MancalaStateTest.java
-java MancalaStateTest
+./gradlew test
 ```
 
-It exercises sowing, captures, extra turns, illegal-move rejection, and end-of-game
-collection, and exits non-zero if any check fails (so it works as a CI gate).
+## Project Structure
 
-## File Structure
+```
+src/
+  main/
+    java/            # application source
+    resources/       # background.png (loaded from the classpath)
+  test/
+    java/            # JUnit 5 tests
+build.gradle         # Gradle build configuration
+.github/workflows/   # GitHub Actions CI
+```
 
 **Rules & AI (pure logic, no UI dependency):**
 - `MancalaState.java` - The complete game rules as a plain `int[14]` board. No Swing
   imports, which is what makes it testable and lets the AI simulate positions freely.
 - `MancalaAI.java` - Computer opponent using minimax with alpha-beta pruning.
-- `MancalaStateTest.java` - Dependency-free unit tests for the rules engine.
+- `MancalaStateTest.java` - JUnit 5 unit tests for the rules engine.
 
 **User interface (Swing):**
 - `Gebeta.java` - Main application class and screen navigation
@@ -95,7 +112,6 @@ collection, and exits non-zero if any check fails (so it works as a CI gate).
 - `GameBoard.java` - Bridges the rules engine to the on-screen board and stones
 - `Pit.java` - Visual pit (geometry + drawing)
 - `Stone.java` - Stone object for visual representation
-- `Background Image.png` - Background image for the intro screen
 
 ## Architecture
 

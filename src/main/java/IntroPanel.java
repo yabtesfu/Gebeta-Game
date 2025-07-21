@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
-import java.io.File;
+import java.io.InputStream;
 
 public class IntroPanel extends JPanel {
     private Gebeta parent;
@@ -17,8 +17,14 @@ public class IntroPanel extends JPanel {
     }
     
     private void loadBackgroundImage() {
-        try {
-          backgroundImage = ImageIO.read(new File("Background Image.png"));
+        // Loaded from the classpath (src/main/resources) so it works regardless of
+        // the working directory and when packaged into a runnable jar.
+        try (InputStream in = getClass().getResourceAsStream("/background.png")) {
+            if (in != null) {
+                backgroundImage = ImageIO.read(in);
+            } else {
+                System.err.println("Background image not found on classpath: /background.png");
+            }
         } catch (Exception e) {
             System.err.println("Error loading background image: " + e.getMessage());
         }
