@@ -4,6 +4,23 @@
 
 A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancala), featuring an AI opponent (minimax with alpha-beta pruning), a fully unit-tested rules engine, and a Gradle build with continuous integration.
 
+![Gameplay demo — animated stone sowing](docs/demo.gif)
+
+> The demo above is rendered directly from the game's own drawing code (see
+> [tools/DemoGifGenerator.java](tools/DemoGifGenerator.java)), so it's an exact
+> capture of the in-game sowing animation.
+
+## Download & Play
+
+Build a self-contained, runnable jar and launch it — no IDE required, just a JDK:
+
+```bash
+./gradlew jar
+java -jar build/libs/gebeta.jar
+```
+
+Or run it straight from source with `./gradlew run`.
+
 ## About the Developer
 
 **Made by:** Yabetse Tesfaye  

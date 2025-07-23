@@ -25,6 +25,17 @@ application {
     mainClass = 'Gebeta'
 }
 
+// Produce a self-contained, runnable jar: `./gradlew jar` -> build/libs/gebeta.jar,
+// launched with `java -jar gebeta.jar` (the app has no third-party runtime deps, so
+// the plain jar — resources included — is fully playable on its own).
+jar {
+    archiveBaseName = 'gebeta'
+    archiveVersion = ''
+    manifest {
+        attributes 'Main-Class': 'Gebeta'
+    }
+}
+
 tasks.named('test') {
     useJUnitPlatform()
     testLogging {
