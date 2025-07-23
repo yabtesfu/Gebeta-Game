@@ -8,6 +8,7 @@ public class GamePanel extends JPanel {
     private JButton backButton;
     private JButton newGameButton;
     private JButton helpButton;
+    private JButton soundButton;
 
     // Game mode. The AI, when present, always plays as Player 1 (the top row);
     // the human is Player 0 and moves first.
@@ -15,7 +16,15 @@ public class GamePanel extends JPanel {
     private boolean vsComputer;
     private int aiDepth;
     private MancalaAI ai;
-    private volatile boolean aiThinking;
+    private boolean aiThinking;
+
+    // Animation. Everything runs on the Swing event thread: a Timer sows one stone
+    // per tick, so the UI never blocks and clicks are simply ignored while it plays.
+    private static final int SOW_INTERVAL_MS = 170;
+    private static final int MOVE_START_DELAY_MS = 220;
+    private static final int AI_THINK_DELAY_MS = 320;
+    private Timer sowTimer;
+    private boolean animating;
 
     public GamePanel(Gebeta parent) {
         this.parent = parent;
@@ -32,13 +41,17 @@ public class GamePanel extends JPanel {
 
         backButton = createStyledButton("Back to Menu", new Color(139, 69, 19));
         backButton.setPreferredSize(new Dimension(150, 40));
-        backButton.addActionListener(e -> parent.showPanel("INTRO"));
+        backButton.addActionListener(e -> {
+            stopAnimation();
+            parent.showPanel("INTRO");
+        });
         topPanel.add(backButton);
 
         newGameButton = createStyledButton("New Game", new Color(34, 139, 34));
         newGameButton.setPreferredSize(new Dimension(150, 40));
         newGameButton.addActionListener(e -> {
-            if (aiThinking) return;
+            stopAnimation();
+            aiThinking = false;
             gameBoard.resetGame();
             repaint();
         });
@@ -48,6 +61,14 @@ public class GamePanel extends JPanel {
         helpButton.setPreferredSize(new Dimension(100, 40));
         helpButton.addActionListener(e -> parent.showPanel("HELP"));
         topPanel.add(helpButton);
+
+        soundButton = createStyledButton(soundLabel(), new Color(128, 0, 128));
+        soundButton.setPreferredSize(new Dimension(130, 40));
+        soundButton.addActionListener(e -> {
+            SoundPlayer.setMuted(!SoundPlayer.isMuted());
+            soundButton.setText(soundLabel());
+        });
+        topPanel.add(soundButton);
 
         add(topPanel, BorderLayout.NORTH);
 
@@ -82,11 +103,12 @@ public class GamePanel extends JPanel {
     }
 
     private void handleHumanClick(MouseEvent e, JPanel gameBoardPanel) {
-        if (gameBoard.isGameOver()) {
+        // Ignore clicks while a move is animating, the computer is thinking, the game
+        // is over, or it is the AI's turn.
+        if (animating || aiThinking || gameBoard.isGameOver()) {
             return;
         }
-        // Ignore clicks while the computer is thinking or when it is the AI's turn.
-        if (aiThinking || (vsComputer && gameBoard.getCurrentPlayer() == AI_PLAYER)) {
+        if (vsComputer && gameBoard.getCurrentPlayer() == AI_PLAYER) {
             return;
         }
 
@@ -100,8 +122,8 @@ public class GamePanel extends JPanel {
         }
 
         int pitIndex = gameBoard.getPitIndex(clickedPit);
-        boolean moveMade = gameBoard.makeMove(pitIndex);
-        if (!moveMade) {
+        MoveTrace trace = gameBoard.makeMove(pitIndex);
+        if (trace == null) {
             JOptionPane.showMessageDialog(
                 GamePanel.this,
                 "Invalid move! Please select a valid pit.",
@@ -110,50 +132,98 @@ public class GamePanel extends JPanel {
             );
             return;
         }
+        animateMove(trace, this::afterMove);
+    }
 
+    /**
+     * Plays a move out one stone at a time on a Swing Timer, then runs {@code onDone}.
+     * The rules engine has already applied the move; this only drives the visuals.
+     */
+    private void animateMove(MoveTrace trace, Runnable onDone) {
+        animating = true;
+        gameBoard.setAnimating(true);
+        gameBoard.visualPickUp(trace.source);
+        SoundPlayer.playPickup();
         repaint();
+
+        final int[] i = {0};
+        sowTimer = new Timer(SOW_INTERVAL_MS, null);
+        sowTimer.setInitialDelay(MOVE_START_DELAY_MS);
+        sowTimer.addActionListener(ev -> {
+            if (i[0] < trace.drops.length) {
+                gameBoard.visualDrop(trace.drops[i[0]]);
+                SoundPlayer.playDrop();
+                i[0]++;
+                repaint();
+                return;
+            }
+            // All stones sown — finish with the capture (if any) and reconcile.
+            sowTimer.stop();
+            sowTimer = null;
+            if (trace.captured) {
+                gameBoard.visualCapture(trace.captureLandingPit, trace.captureOppositePit,
+                        trace.captureStore, trace.capturedTotal);
+                SoundPlayer.playCapture();
+            }
+            gameBoard.syncVisuals(); // covers end-of-game stone collection
+            gameBoard.setAnimating(false);
+            animating = false;
+            repaint();
+            if (onDone != null) {
+                onDone.run();
+            }
+        });
+        sowTimer.start();
+    }
+
+    /** Called once a move's animation completes: end the game or hand off to the AI. */
+    private void afterMove() {
         if (gameBoard.isGameOver()) {
-            SwingUtilities.invokeLater(this::showGameOverDialog);
+            SoundPlayer.playGameOver();
+            showGameOverDialog();
         } else if (vsComputer && gameBoard.getCurrentPlayer() == AI_PLAYER) {
             triggerAiTurn();
         }
     }
 
     /**
-     * Lets the computer play. Runs off the Swing thread so the UI stays responsive,
-     * looping so the AI can take consecutive turns whenever it earns an extra move.
+     * Has the computer choose and play a move. After a short "thinking" pause it picks
+     * a move, then animates it; {@link #afterMove()} re-enters here so the AI keeps
+     * playing while it holds extra turns. All of this stays on the event thread.
      */
     private void triggerAiTurn() {
-        if (ai == null) return;
+        if (ai == null) {
+            return;
+        }
         aiThinking = true;
         repaint();
 
-        new Thread(() -> {
-            try {
-                while (!gameBoard.isGameOver() && gameBoard.getCurrentPlayer() == AI_PLAYER) {
-                    Thread.sleep(650); // brief pause so each move is visible
-                    int move = ai.chooseMove(gameBoard.getStateCopy());
-                    if (move < 0) break;
-                    final int chosen = move;
-                    SwingUtilities.invokeAndWait(() -> {
-                        gameBoard.makeMove(chosen);
-                        repaint();
-                    });
-                }
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            } catch (Exception ex) {
-                // Reflective invoke wrapper — nothing actionable, just stop thinking.
-            } finally {
-                aiThinking = false;
-                SwingUtilities.invokeLater(() -> {
-                    repaint();
-                    if (gameBoard.isGameOver()) {
-                        showGameOverDialog();
-                    }
-                });
+        Timer think = new Timer(AI_THINK_DELAY_MS, null);
+        think.setRepeats(false);
+        think.addActionListener(e -> {
+            int move = ai.chooseMove(gameBoard.getStateCopy());
+            aiThinking = false;
+            if (move < 0) {
+                repaint();
+                return;
             }
-        }, "gebeta-ai").start();
+            MoveTrace trace = gameBoard.makeMove(move);
+            if (trace == null) {
+                repaint();
+                return;
+            }
+            animateMove(trace, this::afterMove);
+        });
+        think.start();
+    }
+
+    private void stopAnimation() {
+        if (sowTimer != null) {
+            sowTimer.stop();
+            sowTimer = null;
+        }
+        animating = false;
+        gameBoard.setAnimating(false);
     }
 
     private void showGameOverDialog() {
@@ -205,6 +275,10 @@ public class GamePanel extends JPanel {
         return button;
     }
 
+    private String soundLabel() {
+        return SoundPlayer.isMuted() ? "Sound: Off" : "Sound: On";
+    }
+
     private void drawGameInfo(Graphics2D g2d) {
         int currentPlayer = gameBoard.getCurrentPlayer();
         Color playerColor = currentPlayer == 0 ? new Color(34, 139, 34) : new Color(70, 130, 180);
@@ -238,6 +312,7 @@ public class GamePanel extends JPanel {
 
     /** Configures the mode and starts a fresh game. Called from the intro menu. */
     public void startGame(boolean vsComputer, int aiDepth) {
+        stopAnimation();
         this.vsComputer = vsComputer;
         this.aiDepth = aiDepth;
         this.ai = vsComputer ? new MancalaAI(aiDepth, AI_PLAYER) : null;
@@ -247,6 +322,8 @@ public class GamePanel extends JPanel {
     }
 
     public void resetGame() {
+        stopAnimation();
+        aiThinking = false;
         gameBoard.resetGame();
         repaint();
     }

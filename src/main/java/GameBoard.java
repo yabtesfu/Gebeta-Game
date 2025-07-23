@@ -13,6 +13,7 @@ import java.util.List;
 public class GameBoard {
     private List<Pit> pits;
     private MancalaState state;
+    private boolean animating;
 
     public GameBoard() {
         state = new MancalaState();
@@ -35,14 +36,15 @@ public class GameBoard {
         }
         pits.add(new Pit(50, 200, 80, 300, true, 1));
 
-        syncPitsFromState();
+        syncVisuals();
     }
 
     /**
      * Makes each visual pit hold as many {@link Stone} objects as the rules engine
      * says it should, adding or removing stones so existing ones keep their colours.
+     * Called at the end of an animation to guarantee the display matches the model.
      */
-    private void syncPitsFromState() {
+    public void syncVisuals() {
         for (int i = 0; i < MancalaState.SIZE; i++) {
             Pit pit = pits.get(i);
             int target = state.stones(i);
@@ -55,13 +57,41 @@ public class GameBoard {
         }
     }
 
-    /** Applies a move through the rules engine and refreshes the visuals. */
-    public boolean makeMove(int pitIndex) {
-        boolean moved = state.applyMove(pitIndex);
-        if (moved) {
-            syncPitsFromState();
+    /**
+     * Applies a move through the rules engine and returns a {@link MoveTrace} for the
+     * caller to animate. The on-screen stones are deliberately left untouched so the
+     * animation can play the move out step by step, then call {@link #syncVisuals()}.
+     *
+     * @return the trace, or {@code null} if the move was illegal.
+     */
+    public MoveTrace makeMove(int pitIndex) {
+        return state.applyMoveTraced(pitIndex);
+    }
+
+    // ---- step-wise visual operations, driven by the animator ----
+
+    /** Visually lifts every stone out of a pit (the start of a move). */
+    public void visualPickUp(int index) {
+        pits.get(index).removeAllStones();
+    }
+
+    /** Visually drops a single stone into a pit. */
+    public void visualDrop(int index) {
+        pits.get(index).addStone(new Stone(0, 0));
+    }
+
+    /** Visually performs a capture: empties both pits and fills the store. */
+    public void visualCapture(int landingPit, int oppositePit, int store, int count) {
+        pits.get(landingPit).removeAllStones();
+        pits.get(oppositePit).removeAllStones();
+        for (int i = 0; i < count; i++) {
+            pits.get(store).addStone(new Stone(0, 0));
         }
-        return moved;
+    }
+
+    /** While true, {@link #draw} skips the game-over overlay so the final move animates first. */
+    public void setAnimating(boolean animating) {
+        this.animating = animating;
     }
 
     private Pit getPlayerStore(int player) {
@@ -96,7 +126,7 @@ public class GameBoard {
         int p2y = player2Store.getY() + player2Store.getHeight() / 2;
         g2d.drawString(p2Score, p2x, p2y);
 
-        if (state.isGameOver()) {
+        if (state.isGameOver() && !animating) {
             g2d.setColor(new Color(0, 0, 0, 150));
             g2d.fillRect(0, 0, 1200, 800);
 
@@ -142,6 +172,7 @@ public class GameBoard {
 
     public void resetGame() {
         state = new MancalaState();
+        animating = false;
         initializeBoard();
     }
 }

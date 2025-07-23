@@ -141,9 +141,23 @@ public class MancalaState {
      *         (the state is left untouched on an illegal move).
      */
     public boolean applyMove(int pit) {
+        return applyMoveTraced(pit) != null;
+    }
+
+    /**
+     * Identical to {@link #applyMove(int)} but returns a {@link MoveTrace} describing
+     * what happened, so the UI can animate the move. This is the single, authoritative
+     * implementation of the sowing rules.
+     *
+     * @return the trace, or {@code null} if the move was illegal (state untouched).
+     */
+    public MoveTrace applyMoveTraced(int pit) {
         if (!isLegalMove(pit)) {
-            return false;
+            return null;
         }
+
+        MoveTrace trace = new MoveTrace();
+        trace.source = pit;
 
         int opponentStore = (currentPlayer == 0) ? P1_STORE : P0_STORE;
         int count = board[pit];
@@ -151,13 +165,16 @@ public class MancalaState {
 
         // Sow counter-clockwise, skipping the opponent's store.
         int index = pit;
+        int[] drops = new int[count];
         for (int i = 0; i < count; i++) {
             index = (index + 1) % SIZE;
             if (index == opponentStore) {
                 index = (index + 1) % SIZE;
             }
             board[index]++;
+            drops[i] = index;
         }
+        trace.drops = drops;
         int last = index;
 
         // Capture: last stone lands in one of the current player's own, previously
@@ -169,16 +186,24 @@ public class MancalaState {
                 board[opposite] = 0;
                 board[last] = 0;
                 board[storeIndex(currentPlayer)] += captured;
+
+                trace.captured = true;
+                trace.captureLandingPit = last;
+                trace.captureOppositePit = opposite;
+                trace.captureStore = storeIndex(currentPlayer);
+                trace.capturedTotal = captured;
             }
         }
 
         boolean extraTurn = (last == storeIndex(currentPlayer));
+        trace.extraTurn = extraTurn;
 
         checkGameOver();
         if (!gameOver && !extraTurn) {
             currentPlayer = 1 - currentPlayer;
         }
-        return true;
+        trace.gameOver = gameOver;
+        return trace;
     }
 
     /**

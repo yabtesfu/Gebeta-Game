@@ -1,5 +1,7 @@
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
@@ -115,6 +117,40 @@ class MancalaStateTest {
         MancalaState clone = original.copy();
         clone.applyMove(0);
         assertEquals(4, original.stones(0), "original must be untouched");
+    }
+
+    @Test
+    @DisplayName("The move trace records the sown pits, extra turn, and no capture")
+    void traceRecordsSowingAndExtraTurn() {
+        MancalaState s = new MancalaState();
+        MoveTrace t = s.applyMoveTraced(2); // 4 stones -> pits 3, 4, 5, store 6
+        assertEquals(2, t.source);
+        assertArrayEquals(new int[]{3, 4, 5, 6}, t.drops);
+        assertTrue(t.extraTurn, "last stone in own store");
+        assertFalse(t.captured);
+        assertFalse(t.gameOver);
+    }
+
+    @Test
+    @DisplayName("The move trace records capture details")
+    void traceRecordsCapture() {
+        MancalaState s = MancalaState.fromBoard(
+                new int[]{1, 0, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0}, 0);
+        MoveTrace t = s.applyMoveTraced(0);
+        assertArrayEquals(new int[]{1}, t.drops);
+        assertTrue(t.captured);
+        assertEquals(1, t.captureLandingPit);
+        assertEquals(11, t.captureOppositePit);
+        assertEquals(MancalaState.P0_STORE, t.captureStore);
+        assertEquals(5, t.capturedTotal);
+    }
+
+    @Test
+    @DisplayName("An illegal move returns a null trace")
+    void traceNullForIllegalMove() {
+        MancalaState s = new MancalaState();
+        assertNull(s.applyMoveTraced(MancalaState.P0_STORE));
+        assertNull(s.applyMoveTraced(7));
     }
 
     @Test
