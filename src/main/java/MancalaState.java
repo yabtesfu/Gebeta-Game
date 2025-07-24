@@ -110,6 +110,26 @@ public class MancalaState {
         return board[pit] > 0;
     }
 
+    /**
+     * True if sowing from {@code pit} would land the last stone in the current player's
+     * own store (earning a free turn). Used to show the "free turn" hint in the UI.
+     */
+    public boolean landsInOwnStore(int pit) {
+        if (!isLegalMove(pit)) {
+            return false;
+        }
+        int opponentStore = (currentPlayer == 0) ? P1_STORE : P0_STORE;
+        int count = board[pit];
+        int pos = pit;
+        for (int i = 0; i < count; i++) {
+            pos = (pos + 1) % SIZE;
+            if (pos == opponentStore) {
+                pos = (pos + 1) % SIZE;
+            }
+        }
+        return pos == storeIndex(currentPlayer);
+    }
+
     /** All pit indices the current player may legally sow from. */
     public List<Integer> legalMoves() {
         List<Integer> moves = new ArrayList<>();

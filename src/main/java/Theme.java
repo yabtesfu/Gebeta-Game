@@ -16,20 +16,43 @@ public final class Theme {
     private Theme() {
     }
 
-    // ---- palette ----
-    public static final Color NIGHT       = new Color(28, 18, 12);   // deep espresso
-    public static final Color NIGHT_2     = new Color(54, 34, 22);   // warm brown
-    public static final Color COFFEE      = new Color(43, 27, 18);
-    public static final Color GOLD        = new Color(212, 165, 62);
-    public static final Color GOLD_LIGHT  = new Color(242, 206, 122);
-    public static final Color GOLD_DARK   = new Color(150, 104, 34);
-    public static final Color TERRACOTTA  = new Color(180, 74, 34);
+    // ---- palette (aligned with the game-board mockup) ----
+    public static final Color NIGHT       = new Color(29, 19, 13);   // #1d130d page base
+    public static final Color NIGHT_2     = new Color(36, 23, 16);   // #241710
+    public static final Color NIGHT_3     = new Color(24, 15, 10);   // #180f0a
+    public static final Color COFFEE      = new Color(43, 28, 17);   // #2b1c11 panels
+    public static final Color GOLD        = new Color(229, 180, 90); // #e5b45a
+    public static final Color GOLD_LIGHT  = new Color(243, 230, 203);// #f3e6cb (cream-gold)
+    public static final Color GOLD_DARK   = new Color(208, 155, 60); // #d09b3c
+    public static final Color TERRACOTTA  = new Color(192, 95, 42);  // #c05f2a (AI)
     public static final Color TERRACOTTA_LIGHT = new Color(210, 110, 66);
-    public static final Color CREAM       = new Color(244, 234, 212);
-    public static final Color PARCHMENT   = new Color(228, 208, 168);
-    public static final Color PARCHMENT_DARK = new Color(198, 172, 128);
-    public static final Color WOOD        = new Color(96, 60, 33);
-    public static final Color WOOD_DARK   = new Color(64, 39, 21);
+    public static final Color CREAM       = new Color(243, 230, 203);// #f3e6cb
+    public static final Color PARCHMENT   = new Color(216, 195, 156);// #d8c39c body text
+    public static final Color PARCHMENT_DARK = new Color(163, 128, 90); // #a3805a
+    public static final Color WOOD        = new Color(124, 76, 39);  // #7c4c27 board top
+    public static final Color WOOD_MID    = new Color(106, 63, 32);  // #6a3f20
+    public static final Color WOOD_DARK   = new Color(93, 55, 25);   // #5d3719
+    public static final Color BOARD_BORDER = new Color(67, 40, 15);  // #43280f
+
+    // Stores (deep carved wells).
+    public static final Color STORE_TOP    = new Color(74, 43, 18);  // #4a2b12
+    public static final Color STORE_BOT    = new Color(58, 32, 9);   // #3a2009
+    public static final Color STORE_BORDER = new Color(46, 26, 8);   // #2e1a08
+
+    // Pits (light carved bowls).
+    public static final Color PIT_TOP = new Color(240, 225, 192);    // #f0e1c0
+    public static final Color PIT_MID = new Color(220, 195, 148);    // #dcc394
+    public static final Color PIT_BOT = new Color(196, 164, 115);    // #c4a473
+
+    // Count badge pills.
+    public static final Color BADGE_BG     = new Color(58, 32, 9);   // #3a2009
+    public static final Color BADGE_BORDER = new Color(87, 55, 26);  // #57371a
+
+    // Player accents.
+    public static final Color YOU_GREEN   = new Color(47, 125, 79);  // #2f7d4f
+    public static final Color YOU_GREEN_D = new Color(28, 84, 52);   // #1c5434
+    public static final Color AI_ORANGE   = new Color(192, 95, 42);  // #c05f2a
+    public static final Color AI_ORANGE_D = new Color(138, 61, 23);  // #8a3d17
 
     // Ethiopian flag accents — used sparingly.
     public static final Color ETH_GREEN   = new Color(30, 122, 61);
@@ -108,6 +131,15 @@ public final class Theme {
         int[] xs = {cx, cx + d, cx, cx - d};
         int[] ys = {y - d, y, y + d, y};
         g.fillPolygon(xs, ys, 4);
+    }
+
+    /**
+     * A stable pseudo-random value in [0,1) for a given integer seed. Used to scatter
+     * stones deterministically so they don't jitter between repaints.
+     */
+    public static double rand(int seed) {
+        double x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+        return x - Math.floor(x);
     }
 
     /** Draws a string centred horizontally at the given baseline y. */

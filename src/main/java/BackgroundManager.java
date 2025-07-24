@@ -1,5 +1,7 @@
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.LinearGradientPaint;
 import java.awt.MultipleGradientPaint;
 import java.awt.Point;
 import java.awt.RadialGradientPaint;
@@ -35,7 +37,61 @@ public final class BackgroundManager {
     private static int cacheH = -1;
     private static int cacheVariant = Integer.MIN_VALUE;
 
+    private static BufferedImage gameCache;
+    private static int gameCacheW = -1;
+    private static int gameCacheH = -1;
+
     private BackgroundManager() {
+    }
+
+    /**
+     * Paints the game-screen backdrop: the dark warm gradient from the mockup with the
+     * Habesha photo laid over it at 40% opacity, so the scene shows through subtly.
+     */
+    public static void paintGame(Graphics2D g, int w, int h) {
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        if (gameCache == null || gameCacheW != w || gameCacheH != h) {
+            gameCache = renderGame(w, h);
+            gameCacheW = w;
+            gameCacheH = h;
+        }
+        g.drawImage(gameCache, 0, 0, null);
+    }
+
+    private static BufferedImage renderGame(int w, int h) {
+        ensureLoaded();
+        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = out.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        // Dark warm vertical gradient (#241710 -> #1d130d @60% -> #180f0a).
+        g.setPaint(new LinearGradientPaint(0, 0, 0, h,
+                new float[]{0f, 0.6f, 1f},
+                new Color[]{Theme.NIGHT_2, Theme.NIGHT, Theme.NIGHT_3}));
+        g.fillRect(0, 0, w, h);
+
+        // The photograph at 40% opacity on top.
+        if (!PHOTOS.isEmpty()) {
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.40f));
+            drawCover(g, PHOTOS.get(0), w, h);
+            g.setComposite(AlphaComposite.SrcOver);
+        }
+
+        // Gentle vignette to focus the centre.
+        RadialGradientPaint vignette = new RadialGradientPaint(
+                new Point(w / 2, h / 2),
+                Math.max(w, h) * 0.75f,
+                new float[]{0f, 1f},
+                new Color[]{new Color(0, 0, 0, 0), new Color(0, 0, 0, 120)},
+                MultipleGradientPaint.CycleMethod.NO_CYCLE);
+        g.setPaint(vignette);
+        g.fillRect(0, 0, w, h);
+
+        g.dispose();
+        return out;
     }
 
     public static int variantCount() {

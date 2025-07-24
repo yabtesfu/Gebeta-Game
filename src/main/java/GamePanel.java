@@ -17,7 +17,6 @@ public class GamePanel extends JPanel {
     private int aiDepth;
     private MancalaAI ai;
     private boolean aiThinking;
-    private int bgVariant;
 
     // Animation. Everything runs on the Swing event thread: a Timer sows one stone
     // per tick, so the UI never blocks and clicks are simply ignored while it plays.
@@ -38,21 +37,34 @@ public class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        BackgroundManager.paint((Graphics2D) g, getWidth(), getHeight(), bgVariant);
+        BackgroundManager.paintGame((Graphics2D) g, getWidth(), getHeight());
     }
 
     private void setupComponents() {
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 16, 12));
+        JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setOpaque(false);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(14, 24, 4, 24));
 
-        backButton = ThemedButton.subtle("‹  Menu");
-        backButton.setPreferredSize(new Dimension(130, 44));
-        backButton.addActionListener(e -> {
-            stopAnimation();
-            parent.showPanel("INTRO");
-        });
-        topPanel.add(backButton);
+        // Title on the left.
+        JPanel titlePanel = new JPanel();
+        titlePanel.setOpaque(false);
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        JLabel title = new JLabel("ገበጣ  Gebeta");
+        title.setFont(Theme.display(30));
+        title.setForeground(Theme.CREAM);
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel subtitle = new JLabel("SOW COUNTERCLOCKWISE");
+        subtitle.setFont(Theme.body(12));
+        subtitle.setForeground(Theme.PARCHMENT_DARK);
+        subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        titlePanel.add(title);
+        titlePanel.add(Box.createVerticalStrut(4));
+        titlePanel.add(subtitle);
+        topPanel.add(titlePanel, BorderLayout.WEST);
+
+        // Buttons on the right.
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 8));
+        buttons.setOpaque(false);
 
         newGameButton = ThemedButton.primary("New Game");
         newGameButton.setPreferredSize(new Dimension(150, 44));
@@ -62,21 +74,30 @@ public class GamePanel extends JPanel {
             gameBoard.resetGame();
             repaint();
         });
-        topPanel.add(newGameButton);
+        buttons.add(newGameButton);
 
         helpButton = ThemedButton.subtle("How to Play");
-        helpButton.setPreferredSize(new Dimension(170, 44));
+        helpButton.setPreferredSize(new Dimension(160, 44));
         helpButton.addActionListener(e -> parent.showPanel("HELP"));
-        topPanel.add(helpButton);
+        buttons.add(helpButton);
 
         soundButton = ThemedButton.secondary(soundLabel());
-        soundButton.setPreferredSize(new Dimension(175, 44));
+        soundButton.setPreferredSize(new Dimension(160, 44));
         soundButton.addActionListener(e -> {
             SoundPlayer.setMuted(!SoundPlayer.isMuted());
             soundButton.setText(soundLabel());
         });
-        topPanel.add(soundButton);
+        buttons.add(soundButton);
 
+        backButton = ThemedButton.subtle("‹  Menu");
+        backButton.setPreferredSize(new Dimension(120, 44));
+        backButton.addActionListener(e -> {
+            stopAnimation();
+            parent.showPanel("INTRO");
+        });
+        buttons.add(backButton);
+
+        topPanel.add(buttons, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
 
         JPanel gameBoardPanel = new JPanel() {
@@ -266,84 +287,94 @@ public class GamePanel extends JPanel {
 
     private void drawGameInfo(Graphics2D g2d) {
         int current = gameBoard.getCurrentPlayer();
-        boolean p1Active = current == 0;
-        boolean p2Active = current == 1;
+        // Human input is live only on the human's turn, when nothing is animating.
+        boolean canInput = !animating && !aiThinking && !gameBoard.isGameOver()
+                && (!vsComputer || current == 0);
+        gameBoard.setInputActive(canInput);
 
-        String p1Name = vsComputer ? "You" : "Player 1";
-        String p2Name = vsComputer ? "Computer" : "Player 2";
-        drawPlayerCard(g2d, 60, 40, p1Name, gameBoard.getStoreScore(0), Theme.ETH_GREEN, p1Active);
-        drawPlayerCard(g2d, 840, 40, p2Name, gameBoard.getStoreScore(1), Theme.TERRACOTTA, p2Active);
+        // Left card = Player 1 / Computer (orange); right card = Player 0 / You (green).
+        String p1Name = vsComputer ? "Computer" : "Player 2";
+        String p0Name = vsComputer ? "You" : "Player 1";
+        drawPlayerCard(g2d, 70, p1Name, vsComputer ? "AI" : "2", gameBoard.getStoreScore(1),
+                Theme.AI_ORANGE, Theme.AI_ORANGE_D, current == 1);
+        drawPlayerCard(g2d, 830, p0Name, vsComputer ? "You" : "1", gameBoard.getStoreScore(0),
+                Theme.YOU_GREEN, Theme.YOU_GREEN_D, current == 0);
 
-        drawStatusPill(g2d, current);
+        drawStatusPill(g2d, current, canInput);
     }
 
-    private void drawPlayerCard(Graphics2D g2d, int x, int y, String name, int score,
-                                Color accent, boolean active) {
+    private void drawPlayerCard(Graphics2D g2d, int x, String name, String token, int score,
+                                Color accent, Color accentDark, boolean active) {
+        int y = 44;
         int w = 300;
-        int h = 96;
+        int h = 92;
         if (active) {
-            // Warm outer glow around the player whose turn it is.
             for (int i = 3; i >= 1; i--) {
-                g2d.setColor(new Color(Theme.GOLD_LIGHT.getRed(), Theme.GOLD_LIGHT.getGreen(),
-                        Theme.GOLD_LIGHT.getBlue(), 26));
-                g2d.fillRoundRect(x - i * 4, y - i * 4, w + i * 8, h + i * 8, 30 + i * 4, 30 + i * 4);
+                g2d.setColor(new Color(Theme.GOLD.getRed(), Theme.GOLD.getGreen(),
+                        Theme.GOLD.getBlue(), 30));
+                g2d.fillRoundRect(x - i * 4, y - i * 4, w + i * 8, h + i * 8, 28 + i * 4, 28 + i * 4);
             }
         }
-        Theme.drawCard(g2d, x, y, w, h, 26, Theme.SCRIM);
+        Theme.drawCard(g2d, x, y, w, h, 24, Theme.COFFEE);
 
-        // Avatar token — a gold ring with the player's accent colour.
-        int av = 64;
-        int ax = x + 18;
+        // Avatar token.
+        int av = 56;
+        int ax = x + 20;
         int ay = y + (h - av) / 2;
-        g2d.setColor(accent.darker());
+        g2d.setPaint(new RadialGradientPaint(new Point(ax + av / 3, ay + av / 3), av,
+                new float[]{0f, 1f}, new Color[]{accent, accentDark}));
         g2d.fillOval(ax, ay, av, av);
-        g2d.setStroke(new BasicStroke(3f));
-        g2d.setColor(active ? Theme.GOLD_LIGHT : Theme.GOLD);
+        g2d.setStroke(new BasicStroke(2f));
+        g2d.setColor(new Color(0, 0, 0, 90));
         g2d.drawOval(ax, ay, av, av);
         g2d.setColor(Theme.CREAM);
-        g2d.setFont(Theme.display(30));
-        String token = name.equals("Computer") ? "AI" : name.substring(0, 1);
-        Theme.drawCentered(g2d, token, ax + av / 2, ay + av / 2 + 11);
+        g2d.setFont(Theme.heading(token.length() > 1 ? 18 : 22));
+        Theme.drawCentered(g2d, token, ax + av / 2, ay + av / 2 + 7);
 
-        // Name + score.
+        // Name + banked score.
         int tx = ax + av + 16;
         g2d.setColor(Theme.CREAM);
-        g2d.setFont(Theme.heading(22));
+        g2d.setFont(Theme.heading(21));
         g2d.drawString(name, tx, y + 40);
-        g2d.setColor(Theme.GOLD_LIGHT);
-        g2d.setFont(Theme.display(30));
-        g2d.drawString(String.valueOf(score), tx, y + 78);
+        g2d.setColor(Theme.GOLD);
+        g2d.setFont(Theme.display(28));
+        String s = String.valueOf(score);
+        g2d.drawString(s, tx, y + 74);
         g2d.setColor(Theme.PARCHMENT_DARK);
-        g2d.setFont(Theme.body(14));
-        g2d.drawString("stones", tx + g2d.getFontMetrics(Theme.display(30)).stringWidth(
-                String.valueOf(score)) + 8, y + 78);
+        g2d.setFont(Theme.body(13));
+        int sw = g2d.getFontMetrics(Theme.display(28)).stringWidth(s);
+        g2d.drawString("banked", tx + sw + 8, y + 74);
     }
 
-    private void drawStatusPill(Graphics2D g2d, int current) {
-        int w = 380;
-        int h = 70;
-        int x = 600 - w / 2;
-        int y = 44;
-
+    private void drawStatusPill(Graphics2D g2d, int current, boolean yourTurn) {
         String status;
-        if (aiThinking) {
+        if (gameBoard.isGameOver()) {
+            status = "Game over";
+        } else if (aiThinking) {
             status = "Computer is thinking…";
         } else if (vsComputer) {
-            status = (current == AI_PLAYER) ? "Computer's turn" : "Your turn";
+            status = (current == AI_PLAYER) ? "Computer's turn"
+                    : "Your turn, pick a glowing pit";
         } else {
             status = "Player " + (current + 1) + "'s turn";
         }
 
-        Theme.drawCard(g2d, x, y, w, h, 34, Theme.SCRIM_LIGHT);
-        g2d.setColor(Theme.CREAM);
-        g2d.setFont(Theme.heading(24));
-        Theme.drawCentered(g2d, status, 600, y + 34);
+        g2d.setFont(Theme.display(20));
+        int tw = g2d.getFontMetrics().stringWidth(status);
+        int w = Math.max(300, tw + 56);
+        int h = 54;
+        int x = 600 - w / 2;
+        int y = 63;
 
-        String sub = vsComputer ? ("Playing the Computer  •  " + difficultyLabel())
-                : "Two Players  •  Local";
-        g2d.setColor(Theme.PARCHMENT_DARK);
-        g2d.setFont(Theme.body(14));
-        Theme.drawCentered(g2d, sub, 600, y + 56);
+        boolean highlight = yourTurn && !gameBoard.isGameOver();
+        g2d.setColor(Theme.COFFEE);
+        g2d.fillRoundRect(x, y, w, h, h, h);
+        g2d.setStroke(new BasicStroke(1.5f));
+        g2d.setColor(highlight ? new Color(229, 180, 90, 160) : new Color(75, 54, 32));
+        g2d.drawRoundRect(x, y, w, h, h, h);
+
+        g2d.setColor(highlight ? Theme.GOLD : new Color(201, 174, 134));
+        Theme.drawCentered(g2d, status, 600, y + 35);
     }
 
     private String difficultyLabel() {
@@ -359,7 +390,8 @@ public class GamePanel extends JPanel {
         this.aiDepth = aiDepth;
         this.ai = vsComputer ? new MancalaAI(aiDepth, AI_PLAYER) : null;
         this.aiThinking = false;
-        this.bgVariant = (bgVariant + 1) % Math.max(1, BackgroundManager.variantCount() * 3);
+        gameBoard.setPlayerLabels(vsComputer ? "You" : "Player 1",
+                vsComputer ? "Computer" : "Player 2");
         gameBoard.resetGame();
         repaint();
     }
