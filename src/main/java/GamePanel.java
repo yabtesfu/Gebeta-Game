@@ -17,6 +17,7 @@ public class GamePanel extends JPanel {
     private int aiDepth;
     private MancalaAI ai;
     private boolean aiThinking;
+    private int bgVariant;
 
     // Animation. Everything runs on the Swing event thread: a Timer sows one stone
     // per tick, so the UI never blocks and clicks are simply ignored while it plays.
@@ -30,25 +31,31 @@ public class GamePanel extends JPanel {
         this.parent = parent;
         this.gameBoard = new GameBoard();
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 220));
+        setOpaque(true);
         setupComponents();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        BackgroundManager.paint((Graphics2D) g, getWidth(), getHeight(), bgVariant);
     }
 
     private void setupComponents() {
         JPanel topPanel = new JPanel();
-        topPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
-        topPanel.setBackground(new Color(245, 245, 220));
+        topPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 16, 12));
+        topPanel.setOpaque(false);
 
-        backButton = createStyledButton("Back to Menu", new Color(139, 69, 19));
-        backButton.setPreferredSize(new Dimension(150, 40));
+        backButton = ThemedButton.subtle("‹  Menu");
+        backButton.setPreferredSize(new Dimension(130, 44));
         backButton.addActionListener(e -> {
             stopAnimation();
             parent.showPanel("INTRO");
         });
         topPanel.add(backButton);
 
-        newGameButton = createStyledButton("New Game", new Color(34, 139, 34));
-        newGameButton.setPreferredSize(new Dimension(150, 40));
+        newGameButton = ThemedButton.primary("New Game");
+        newGameButton.setPreferredSize(new Dimension(150, 44));
         newGameButton.addActionListener(e -> {
             stopAnimation();
             aiThinking = false;
@@ -57,13 +64,13 @@ public class GamePanel extends JPanel {
         });
         topPanel.add(newGameButton);
 
-        helpButton = createStyledButton("Help", new Color(70, 130, 180));
-        helpButton.setPreferredSize(new Dimension(100, 40));
+        helpButton = ThemedButton.subtle("How to Play");
+        helpButton.setPreferredSize(new Dimension(170, 44));
         helpButton.addActionListener(e -> parent.showPanel("HELP"));
         topPanel.add(helpButton);
 
-        soundButton = createStyledButton(soundLabel(), new Color(128, 0, 128));
-        soundButton.setPreferredSize(new Dimension(130, 40));
+        soundButton = ThemedButton.secondary(soundLabel());
+        soundButton.setPreferredSize(new Dimension(175, 44));
         soundButton.addActionListener(e -> {
             SoundPlayer.setMuted(!SoundPlayer.isMuted());
             soundButton.setText(soundLabel());
@@ -82,16 +89,16 @@ public class GamePanel extends JPanel {
                 int panelHeight = getHeight();
                 double scaleX = (double) panelWidth / 1200.0;
                 double scaleY = (double) panelHeight / 800.0;
-                double scale = Math.min(scaleX, scaleY) * 0.9;
+                double scale = Math.min(scaleX, scaleY) * 0.94;
                 g2d.scale(scale, scale);
                 int offsetX = (int) ((panelWidth / scale - 1200) / 2);
                 int offsetY = (int) ((panelHeight / scale - 800) / 2);
                 g2d.translate(offsetX, offsetY);
-                gameBoard.draw(g2d);
                 drawGameInfo(g2d);
+                gameBoard.draw(g2d);
             }
         };
-        gameBoardPanel.setBackground(new Color(245, 245, 220));
+        gameBoardPanel.setOpaque(false);
         gameBoardPanel.setPreferredSize(new Dimension(1200, 800));
         gameBoardPanel.addMouseListener(new MouseAdapter() {
             @Override
@@ -124,13 +131,7 @@ public class GamePanel extends JPanel {
         int pitIndex = gameBoard.getPitIndex(clickedPit);
         MoveTrace trace = gameBoard.makeMove(pitIndex);
         if (trace == null) {
-            JOptionPane.showMessageDialog(
-                GamePanel.this,
-                "Invalid move! Please select a valid pit.",
-                "Invalid Move",
-                JOptionPane.WARNING_MESSAGE
-            );
-            return;
+            return; // not a legal pit to pick up — ignore the click quietly
         }
         animateMove(trace, this::afterMove);
     }
@@ -227,13 +228,14 @@ public class GamePanel extends JPanel {
     }
 
     private void showGameOverDialog() {
-        int choice = JOptionPane.showConfirmDialog(
+        boolean again = ThemedDialog.confirm(
             GamePanel.this,
-            gameBoard.getWinner() + "\nDo you want to play again?",
             "Game Over",
-            JOptionPane.YES_NO_OPTION
+            gameBoard.getWinner() + "\n\nWould you like to play again?",
+            "Play Again",
+            "Close"
         );
-        if (choice == JOptionPane.YES_OPTION) {
+        if (again) {
             gameBoard.resetGame();
             repaint();
         }
@@ -245,7 +247,7 @@ public class GamePanel extends JPanel {
         if (panelWidth <= 0 || panelHeight <= 0) return null;
         double scaleX = (double) panelWidth / 1200.0;
         double scaleY = (double) panelHeight / 800.0;
-        double scale = Math.min(scaleX, scaleY) * 0.9;
+        double scale = Math.min(scaleX, scaleY) * 0.94;
         int offsetX = (int) ((panelWidth / scale - 1200) / 2);
         int offsetY = (int) ((panelHeight / scale - 800) / 2);
         int gameX = (int) ((mousePoint.x - offsetX * scale) / scale);
@@ -256,52 +258,92 @@ public class GamePanel extends JPanel {
         return new Point(gameX, gameY);
     }
 
-    private JButton createStyledButton(String text, Color backgroundColor) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setBackground(backgroundColor);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorderPainted(false);
-        button.setOpaque(true);
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                button.setBackground(backgroundColor.brighter());
-            }
-            public void mouseExited(MouseEvent e) {
-                button.setBackground(backgroundColor);
-            }
-        });
-        return button;
+    private String soundLabel() {
+        return SoundPlayer.isMuted() ? "♪ Sound: Off" : "♪ Sound: On";
     }
 
-    private String soundLabel() {
-        return SoundPlayer.isMuted() ? "Sound: Off" : "Sound: On";
-    }
+    // ---- heads-up display drawn in the 1200x800 board space (scales with the board) ----
 
     private void drawGameInfo(Graphics2D g2d) {
-        int currentPlayer = gameBoard.getCurrentPlayer();
-        Color playerColor = currentPlayer == 0 ? new Color(34, 139, 34) : new Color(70, 130, 180);
+        int current = gameBoard.getCurrentPlayer();
+        boolean p1Active = current == 0;
+        boolean p2Active = current == 1;
 
-        String playerText;
+        String p1Name = vsComputer ? "You" : "Player 1";
+        String p2Name = vsComputer ? "Computer" : "Player 2";
+        drawPlayerCard(g2d, 60, 40, p1Name, gameBoard.getStoreScore(0), Theme.ETH_GREEN, p1Active);
+        drawPlayerCard(g2d, 840, 40, p2Name, gameBoard.getStoreScore(1), Theme.TERRACOTTA, p2Active);
+
+        drawStatusPill(g2d, current);
+    }
+
+    private void drawPlayerCard(Graphics2D g2d, int x, int y, String name, int score,
+                                Color accent, boolean active) {
+        int w = 300;
+        int h = 96;
+        if (active) {
+            // Warm outer glow around the player whose turn it is.
+            for (int i = 3; i >= 1; i--) {
+                g2d.setColor(new Color(Theme.GOLD_LIGHT.getRed(), Theme.GOLD_LIGHT.getGreen(),
+                        Theme.GOLD_LIGHT.getBlue(), 26));
+                g2d.fillRoundRect(x - i * 4, y - i * 4, w + i * 8, h + i * 8, 30 + i * 4, 30 + i * 4);
+            }
+        }
+        Theme.drawCard(g2d, x, y, w, h, 26, Theme.SCRIM);
+
+        // Avatar token — a gold ring with the player's accent colour.
+        int av = 64;
+        int ax = x + 18;
+        int ay = y + (h - av) / 2;
+        g2d.setColor(accent.darker());
+        g2d.fillOval(ax, ay, av, av);
+        g2d.setStroke(new BasicStroke(3f));
+        g2d.setColor(active ? Theme.GOLD_LIGHT : Theme.GOLD);
+        g2d.drawOval(ax, ay, av, av);
+        g2d.setColor(Theme.CREAM);
+        g2d.setFont(Theme.display(30));
+        String token = name.equals("Computer") ? "AI" : name.substring(0, 1);
+        Theme.drawCentered(g2d, token, ax + av / 2, ay + av / 2 + 11);
+
+        // Name + score.
+        int tx = ax + av + 16;
+        g2d.setColor(Theme.CREAM);
+        g2d.setFont(Theme.heading(22));
+        g2d.drawString(name, tx, y + 40);
+        g2d.setColor(Theme.GOLD_LIGHT);
+        g2d.setFont(Theme.display(30));
+        g2d.drawString(String.valueOf(score), tx, y + 78);
+        g2d.setColor(Theme.PARCHMENT_DARK);
+        g2d.setFont(Theme.body(14));
+        g2d.drawString("stones", tx + g2d.getFontMetrics(Theme.display(30)).stringWidth(
+                String.valueOf(score)) + 8, y + 78);
+    }
+
+    private void drawStatusPill(Graphics2D g2d, int current) {
+        int w = 380;
+        int h = 70;
+        int x = 600 - w / 2;
+        int y = 44;
+
+        String status;
         if (aiThinking) {
-            playerText = "Computer is thinking...";
+            status = "Computer is thinking…";
         } else if (vsComputer) {
-            playerText = (currentPlayer == AI_PLAYER) ? "Computer's turn" : "Your turn";
+            status = (current == AI_PLAYER) ? "Computer's turn" : "Your turn";
         } else {
-            playerText = "Current Player: " + (currentPlayer + 1);
+            status = "Player " + (current + 1) + "'s turn";
         }
 
-        g2d.setColor(playerColor);
-        g2d.setFont(new Font("Arial", Font.BOLD, 20));
-        g2d.drawString(playerText, 800, 60);
-        g2d.fillOval(780, 45, 15, 15);
+        Theme.drawCard(g2d, x, y, w, h, 34, Theme.SCRIM_LIGHT);
+        g2d.setColor(Theme.CREAM);
+        g2d.setFont(Theme.heading(24));
+        Theme.drawCentered(g2d, status, 600, y + 34);
 
-        if (vsComputer) {
-            g2d.setColor(new Color(139, 69, 19));
-            g2d.setFont(new Font("Arial", Font.PLAIN, 16));
-            g2d.drawString("Mode: vs Computer (" + difficultyLabel() + ")", 800, 90);
-        }
+        String sub = vsComputer ? ("Playing the Computer  •  " + difficultyLabel())
+                : "Two Players  •  Local";
+        g2d.setColor(Theme.PARCHMENT_DARK);
+        g2d.setFont(Theme.body(14));
+        Theme.drawCentered(g2d, sub, 600, y + 56);
     }
 
     private String difficultyLabel() {
@@ -317,6 +359,7 @@ public class GamePanel extends JPanel {
         this.aiDepth = aiDepth;
         this.ai = vsComputer ? new MancalaAI(aiDepth, AI_PLAYER) : null;
         this.aiThinking = false;
+        this.bgVariant = (bgVariant + 1) % Math.max(1, BackgroundManager.variantCount() * 3);
         gameBoard.resetGame();
         repaint();
     }

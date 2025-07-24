@@ -1,115 +1,69 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 
 public class AboutPanel extends JPanel {
     private Gebeta parent;
-    
+
     public AboutPanel(Gebeta parent) {
         this.parent = parent;
-        setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 220)); 
+        setLayout(new GridBagLayout());
+        setOpaque(true);
         setupComponents();
     }
-    
-    private void setupComponents() {
-        
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setBackground(new Color(245, 245, 220));
-        
-        
-        contentPanel.add(Box.createVerticalStrut(100));
-        
-       
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        infoPanel.setBackground(new Color(255, 250, 240)); // Floral White
-        infoPanel.setBorder(BorderFactory.createLineBorder(new Color(139, 69, 19), 3));
-        infoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        infoPanel.setMaximumSize(new Dimension(800, 400));
-        infoPanel.setPreferredSize(new Dimension(800, 400));
-        
-     
-        JLabel nameLabel = new JLabel("Made by: Yabetse Tesfaye");
-        nameLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        nameLabel.setForeground(new Color(70, 130, 180));
-        nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel institutionLabel = new JLabel("Student at Addis Ababa Institute of Technology");
-        institutionLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        institutionLabel.setForeground(new Color(70, 130, 180));
-        institutionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel programLabel = new JLabel("Software Engineer");
-        programLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        programLabel.setForeground(new Color(70, 130, 180));
-        programLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel yearLabel = new JLabel("5th Year Student");
-        yearLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        yearLabel.setForeground(new Color(70, 130, 180));
-        yearLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel idLabel = new JLabel("ID: UGR/31352/15");
-        idLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        idLabel.setForeground(new Color(70, 130, 180));
-        idLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-      
-        infoPanel.add(Box.createVerticalStrut(30));
-        infoPanel.add(nameLabel);
-        infoPanel.add(Box.createVerticalStrut(20));
-        infoPanel.add(institutionLabel);
-        infoPanel.add(Box.createVerticalStrut(15));
-        infoPanel.add(programLabel);
-        infoPanel.add(Box.createVerticalStrut(15));
-        infoPanel.add(yearLabel);
-        infoPanel.add(Box.createVerticalStrut(15));
-        infoPanel.add(idLabel);
-        infoPanel.add(Box.createVerticalStrut(30));
-        
-        contentPanel.add(infoPanel);
-        
 
-        contentPanel.add(Box.createVerticalStrut(50));
-        
-    
-        JButton backButton = createStyledButton("Back to Menu", new Color(139, 69, 19));
-        backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        backButton.setMaximumSize(new Dimension(200, 50));
-        backButton.setPreferredSize(new Dimension(200, 50));
-        backButton.addActionListener(e -> parent.showPanel("INTRO"));
-        contentPanel.add(backButton);
-        
-       
-        contentPanel.add(Box.createVerticalGlue());
-        
-     
-        JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.setOpaque(false);
-        centerPanel.add(contentPanel, BorderLayout.CENTER);
-        
-        add(centerPanel, BorderLayout.CENTER);
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+        Theme.enableAntialias(g2);
+        BackgroundManager.paint(g2, getWidth(), getHeight(), 1);
+        Theme.drawFooter(g2, getWidth(), getHeight());
     }
-    
-    private JButton createStyledButton(String text, Color backgroundColor) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 18));
-        button.setBackground(backgroundColor);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorderPainted(false);
-        button.setOpaque(true);
-      
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                button.setBackground(backgroundColor.brighter());
-            }
-            public void mouseExited(MouseEvent e) {
-                button.setBackground(backgroundColor);
-            }
-        });
-        
-        return button;
+
+    private void setupComponents() {
+        CardPanel card = new CardPanel(36, 40, 56);
+
+        card.add(label("ገበጣ", Theme.display(40), Theme.GOLD_LIGHT));
+        card.add(Box.createVerticalStrut(6));
+        card.add(CardPanel.divider(440));
+        card.add(Box.createVerticalStrut(10));
+        card.add(label("Why I Built This Game", Theme.display(34), Theme.CREAM));
+        card.add(Box.createVerticalStrut(28));
+
+        String html = "<html><div style='width:600px; text-align:center;'>"
+                + "Gebeta is one of the oldest games in the world, played across Ethiopia "
+                + "and the Horn of Africa for countless generations, around markets, in "
+                + "homes, and wherever people gather.<br><br>"
+                + "I built this game to share our culture with the world. Gebeta carries a "
+                + "piece of who we are, and I wanted anyone, anywhere, to be able to sit "
+                + "down and play it.<br><br>"
+                + "I also love engineering and crafting things. I enjoy taking an idea and "
+                + "shaping it into something real you can play. This project is where my "
+                + "heritage and my craft meet."
+                + "</div></html>";
+        JLabel body = new JLabel(html);
+        body.setFont(Theme.body(18));
+        body.setForeground(Theme.PARCHMENT);
+        body.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(body);
+        card.add(Box.createVerticalStrut(34));
+
+        ThemedButton back = ThemedButton.primary("‹  Back to Menu");
+        back.setAlignmentX(Component.CENTER_ALIGNMENT);
+        Dimension size = new Dimension(240, 52);
+        back.setPreferredSize(size);
+        back.setMaximumSize(size);
+        back.addActionListener(e -> parent.showPanel("INTRO"));
+        card.add(back);
+
+        add(card);
     }
-} 
+
+    private JLabel label(String text, Font font, Color color) {
+        JLabel label = new JLabel(text);
+        label.setFont(font);
+        label.setForeground(color);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return label;
+    }
+}

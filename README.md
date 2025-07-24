@@ -2,13 +2,17 @@
 
 [![CI](https://github.com/yabtesfu/Gebeta-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/yabtesfu/Gebeta-Game/actions/workflows/ci.yml)
 
-A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancala), featuring an AI opponent (minimax with alpha-beta pruning), a fully unit-tested rules engine, and a Gradle build with continuous integration.
+A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancala), featuring an AI opponent (minimax with alpha-beta pruning), a fully unit-tested rules engine, and a Gradle build with continuous integration. The interface is themed around Habesha (Ethiopian) culture — warm coffee-and-gold tones over a backdrop of elders playing gebeta.
 
 ![Gameplay demo — animated stone sowing](docs/demo.gif)
 
-> The demo above is rendered directly from the game's own drawing code (see
+> The board above is rendered directly from the game's own drawing code (see
 > [tools/DemoGifGenerator.java](tools/DemoGifGenerator.java)), so it's an exact
 > capture of the in-game sowing animation.
+
+|  Main menu  |  In game  |
+| :---------: | :-------: |
+| ![Main menu](docs/screenshot-intro.png) | ![Game screen](docs/screenshot-game.png) |
 
 ## Download & Play
 
@@ -39,9 +43,14 @@ Or run it straight from source with `./gradlew run`.
   It looks several moves ahead, correctly handles Gebeta's "extra turn" rule, and gets
   stronger as difficulty increases (search depth 1 → 5 → 9). The AI runs on a background
   thread so the interface stays responsive.
-- **Beautiful GUI:** Aesthetic board design with colorful stones and intuitive interface
+- **Habesha-themed UI:** A cohesive traditional Ethiopian look — coffee-and-gold palette,
+  a carved wooden board, coffee-bean stones, and a warm photographic backdrop of elders
+  playing gebeta. Drop extra photos named `background1.png`, `background2.png`, … into
+  `src/main/resources` and they automatically join the background rotation.
+- **Animated & audible:** Stones sow one at a time, with sound effects synthesized in
+  code (no audio files shipped) and a mute toggle.
 - **Multiple Panels:**
-  - Intro page with background image
+  - Themed main menu over the cultural backdrop
   - Game board with full functionality
   - About page with developer information
   - Help page with game instructions and tutorial video link
@@ -120,15 +129,26 @@ build.gradle         # Gradle build configuration
 - `MancalaAI.java` - Computer opponent using minimax with alpha-beta pruning.
 - `MancalaStateTest.java` - JUnit 5 unit tests for the rules engine.
 
+**Theme & presentation:**
+- `Theme.java` - Central Habesha palette, fonts, and shared paint helpers (cards, dividers).
+- `ThemedButton.java` - Rounded, gradient buttons with gold rims and hover feedback.
+- `BackgroundManager.java` - Warm-tinted photographic backdrop, cached and with drop-in variations.
+- `SoundPlayer.java` - Sound effects synthesized in code (no audio assets), with a mute toggle.
+
 **User interface (Swing):**
 - `Gebeta.java` - Main application class and screen navigation
-- `IntroPanel.java` - Introduction screen and mode/difficulty selection
-- `GamePanel.java` - Game interface, input handling, and AI turn orchestration
-- `AboutPanel.java` - Developer information
-- `HelpPanel.java` - Game instructions and help
+- `IntroPanel.java` - Themed main menu and mode/difficulty selection
+- `GamePanel.java` - Game HUD, input handling, animation, and AI turn orchestration
+- `AboutPanel.java` - The story behind the game (culture + craft)
+- `HelpPanel.java` - How to play
 - `GameBoard.java` - Bridges the rules engine to the on-screen board and stones
 - `Pit.java` - Visual pit (geometry + drawing)
 - `Stone.java` - Stone object for visual representation
+- `MoveTrace.java` - Per-move record the UI replays as the sowing animation
+
+**Developer tools (`tools/`, not part of the game):**
+- `DemoGifGenerator.java` - Renders the board's own draw code to the animated README GIF.
+- `ScreenshotTool.java` - Renders each screen headlessly to a PNG for the README.
 
 ## Architecture
 

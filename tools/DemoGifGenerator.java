@@ -21,14 +21,19 @@ import javax.imageio.stream.ImageOutputStream;
  * Run from the project root after a build:
  * <pre>
  *   javac -cp build/classes/java/main -d tools tools/DemoGifGenerator.java
- *   java  -cp build/classes/java/main:tools DemoGifGenerator docs/demo.gif
+ *   java  -cp build/classes/java/main:build/resources/main:tools DemoGifGenerator docs/demo.gif
  * </pre>
  */
 public class DemoGifGenerator {
     private static final int SRC_W = 1200;
     private static final int SRC_H = 800;
-    private static final int OUT_W = 600;
-    private static final int OUT_H = 400;
+    // Crop tight to the wooden tray so the demo focuses on the board, not empty margin.
+    private static final int CROP_X = 30;
+    private static final int CROP_Y = 138;
+    private static final int CROP_W = 1140;
+    private static final int CROP_H = 476;
+    private static final int OUT_W = 640;
+    private static final int OUT_H = OUT_W * CROP_H / CROP_W;
 
     public static void main(String[] args) throws Exception {
         System.setProperty("java.awt.headless", "true");
@@ -99,11 +104,16 @@ public class DemoGifGenerator {
         delays.add(delayMs);
     }
 
-    /** Renders the board through its real draw code, scaled down for a compact GIF. */
+    /**
+     * Renders the board through its real draw code onto a warm backdrop, then crops to
+     * the tray and scales down. A solid warm backdrop (rather than the photo) survives
+     * GIF's 256-colour quantization cleanly.
+     */
     private static BufferedImage render(GameBoard board) {
         BufferedImage full = new BufferedImage(SRC_W, SRC_H, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = full.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        Theme.paintBackdrop(g, SRC_W, SRC_H);
         board.draw(g);
         g.dispose();
 
@@ -111,7 +121,8 @@ public class DemoGifGenerator {
         Graphics2D gs = scaled.createGraphics();
         gs.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                 RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        gs.drawImage(full, 0, 0, OUT_W, OUT_H, null);
+        gs.drawImage(full, 0, 0, OUT_W, OUT_H,
+                CROP_X, CROP_Y, CROP_X + CROP_W, CROP_Y + CROP_H, null);
         gs.dispose();
         return scaled;
     }

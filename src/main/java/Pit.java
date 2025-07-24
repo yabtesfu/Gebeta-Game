@@ -79,25 +79,44 @@ public class Pit {
     }
     
     public void draw(Graphics2D g2d) {
+        // Carved hollow: a soft radial gradient makes each pit look scooped out.
+        java.awt.Paint fill;
         if (isStore) {
-            g2d.setColor(new Color(210, 180, 140));
+            fill = new java.awt.GradientPaint(x, y, new Color(150, 92, 50),
+                    x, y + height, new Color(96, 56, 28));
         } else {
-            g2d.setColor(new Color(245, 222, 179));
+            fill = new java.awt.RadialGradientPaint(
+                    new java.awt.Point(x + width / 2, y + height / 2),
+                    Math.max(width, height) / 2f,
+                    new float[]{0f, 1f},
+                    new Color[]{new Color(236, 216, 176), new Color(196, 162, 116)});
         }
+        g2d.setPaint(fill);
         g2d.fillOval(x, y, width, height);
-        g2d.setColor(new Color(139, 69, 19));
+
+        // Inner shadow ring for depth.
         g2d.setStroke(new BasicStroke(3));
+        g2d.setColor(new Color(60, 36, 18, 130));
+        g2d.drawOval(x + 3, y + 3, width - 6, height - 6);
+
+        // Gold rim.
+        g2d.setStroke(new BasicStroke(3.5f));
+        g2d.setColor(new Color(212, 165, 62));
         g2d.drawOval(x, y, width, height);
+
         for (Stone stone : stones) {
             stone.draw(g2d);
         }
+
         if (!isStore) {
-            g2d.setColor(Color.BLACK);
-            g2d.setFont(new Font("Arial", Font.BOLD, 16));
             String count = String.valueOf(stones.size());
+            g2d.setFont(new Font("SansSerif", Font.BOLD, 18));
             FontMetrics fm = g2d.getFontMetrics();
-            int textX = x + width/2 - fm.stringWidth(count)/2;
-            int textY = y + height + 20;
+            int textX = x + width / 2 - fm.stringWidth(count) / 2;
+            int textY = y + height + 22;
+            g2d.setColor(new Color(0, 0, 0, 140));
+            g2d.drawString(count, textX + 1, textY + 1);
+            g2d.setColor(new Color(244, 234, 212));
             g2d.drawString(count, textX, textY);
         }
     }
