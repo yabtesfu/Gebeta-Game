@@ -219,6 +219,14 @@ public class GameBoard {
         return state.copy();
     }
 
+    /** Replaces the current position with a validated persisted snapshot. */
+    public void restoreGame(int[] board, int currentPlayer) {
+        state = MancalaState.fromBoard(board, currentPlayer);
+        animating = false;
+        lastIndex = -1;
+        initializeBoard();
+    }
+
     public void resetGame() {
         state = new MancalaState();
         animating = false;

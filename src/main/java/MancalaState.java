@@ -50,6 +50,11 @@ public class MancalaState {
         return new MancalaState(board, currentPlayer, gameOver);
     }
 
+    /** Snapshot suitable for persistence; callers cannot mutate this state. */
+    public int[] toBoard() {
+        return board.clone();
+    }
+
     /**
      * Builds a position from an explicit 14-slot board — handy for tests, puzzles,
      * and loading a saved game.
@@ -60,6 +65,14 @@ public class MancalaState {
     public static MancalaState fromBoard(int[] board, int currentPlayer) {
         if (board.length != SIZE) {
             throw new IllegalArgumentException("board must have exactly " + SIZE + " slots");
+        }
+        if (currentPlayer != 0 && currentPlayer != 1) {
+            throw new IllegalArgumentException("currentPlayer must be 0 or 1");
+        }
+        for (int stones : board) {
+            if (stones < 0) {
+                throw new IllegalArgumentException("board cannot contain negative stones");
+            }
         }
         return new MancalaState(board, currentPlayer, false);
     }

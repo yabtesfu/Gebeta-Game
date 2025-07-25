@@ -3,6 +3,8 @@ import java.awt.*;
 
 public class IntroPanel extends JPanel {
     private Gebeta parent;
+    private JPanel resumeSection;
+    private JLabel statsLabel;
 
     public IntroPanel(Gebeta parent) {
         this.parent = parent;
@@ -28,24 +30,56 @@ public class IntroPanel extends JPanel {
         card.add(centeredLabel("GEBETA", Theme.display(58), Theme.CREAM));
         card.add(Box.createVerticalStrut(8));
         card.add(centeredLabel("Traditional Ethiopian Mancala", Theme.body(18), Theme.PARCHMENT));
-        card.add(Box.createVerticalStrut(30));
+        card.add(Box.createVerticalStrut(20));
 
-        card.add(menuButton(ThemedButton.primary("Two Players"),
+        resumeSection = new JPanel();
+        resumeSection.setOpaque(false);
+        resumeSection.setLayout(new BoxLayout(resumeSection, BoxLayout.Y_AXIS));
+        resumeSection.add(menuButton(ThemedButton.primary("Resume Game"),
+                e -> parent.resumeGame()));
+        resumeSection.add(Box.createVerticalStrut(12));
+        resumeSection.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(resumeSection);
+
+        card.add(menuButton(ThemedButton.secondary("Two Players"),
                 e -> parent.startGame(false, 0)));
-        card.add(Box.createVerticalStrut(16));
+        card.add(Box.createVerticalStrut(12));
         card.add(menuButton(ThemedButton.secondary("Play vs Computer"),
                 e -> chooseDifficultyAndPlay()));
-        card.add(Box.createVerticalStrut(16));
+        card.add(Box.createVerticalStrut(12));
         card.add(menuButton(ThemedButton.subtle("How to Play"),
                 e -> parent.showPanel("HELP")));
-        card.add(Box.createVerticalStrut(16));
+        card.add(Box.createVerticalStrut(12));
         card.add(menuButton(ThemedButton.subtle("About"),
                 e -> parent.showPanel("ABOUT")));
-        card.add(Box.createVerticalStrut(16));
+        card.add(Box.createVerticalStrut(12));
+
+        statsLabel = centeredLabel("", Theme.body(13), Theme.PARCHMENT_DARK);
+        card.add(statsLabel);
+        card.add(Box.createVerticalStrut(12));
         card.add(menuButton(new ThemedButton("Exit", Theme.ETH_RED),
                 e -> System.exit(0)));
 
         add(card);
+        refreshPersistence();
+    }
+
+    /** Refreshes the resume control and record whenever the menu becomes visible. */
+    public void refreshPersistence() {
+        if (resumeSection == null || statsLabel == null) return;
+        if (parent == null) {
+            resumeSection.setVisible(false);
+            statsLabel.setText("VS AI  W 0 · L 0 · D 0     LOCAL  P1 0 · P2 0 · D 0");
+            return;
+        }
+        resumeSection.setVisible(parent.hasSavedGame());
+        GamePersistence.Stats stats = parent.stats();
+        statsLabel.setText(String.format(
+                "VS AI  W %d · L %d · D %d     LOCAL  P1 %d · P2 %d · D %d",
+                stats.humanWins, stats.computerWins, stats.computerTies,
+                stats.player1Wins, stats.player2Wins, stats.localTies));
+        revalidate();
+        repaint();
     }
 
     private JButton menuButton(ThemedButton button, java.awt.event.ActionListener onClick) {

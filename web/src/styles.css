@@ -101,9 +101,12 @@ button:focus-visible { outline: 3px solid #f4c430; outline-offset: 3px; }
 .button:hover { transform: translateY(-2px); }
 .button.primary { color: #28180d; background: linear-gradient(135deg, #f0c66f, #d49a37); box-shadow: 0 9px 25px rgba(229, 180, 90, .2); }
 .button.secondary { color: var(--gold-light); border: 1px solid rgba(229, 180, 90, .52); background: rgba(229, 180, 90, .07); }
+.button.resume { display: flex; justify-content: space-between; color: #eaf7ee; border: 1px solid rgba(76, 169, 108, .7); background: linear-gradient(135deg, rgba(47, 125, 79, .9), rgba(28, 84, 52, .9)); box-shadow: 0 9px 25px rgba(47, 125, 79, .2); }
 .text-button { padding: 10px; color: var(--parchment); background: transparent; }
 .text-button:hover { color: var(--gold); }
-.no-install { margin: 25px 0 0; color: #866d50; font-size: .72rem; }
+.record { display: flex; justify-content: center; flex-wrap: wrap; gap: 7px 18px; margin-top: 21px; color: #9f8464; font-size: .68rem; }
+.record b { margin-right: 4px; color: var(--gold); font-size: .6rem; letter-spacing: .08em; }
+.no-install { margin: 13px 0 0; color: #866d50; font-size: .72rem; }
 
 .game { display: flex; flex-direction: column; background: linear-gradient(rgba(24, 15, 10, .65), rgba(24, 15, 10, .9)); }
 .game-header {

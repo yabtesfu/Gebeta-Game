@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.net.URI;
+import java.util.Optional;
 
 public class Gebeta extends JFrame {
     private CardLayout cardLayout;
@@ -10,8 +9,10 @@ public class Gebeta extends JFrame {
     private GamePanel gamePanel;
     private AboutPanel aboutPanel;
     private HelpPanel helpPanel;
+    private final GamePersistence persistence;
     
     public Gebeta() {
+        persistence = new GamePersistence();
         setTitle("Gebeta - Traditional Ethiopian Board Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
@@ -26,7 +27,7 @@ public class Gebeta extends JFrame {
         mainPanel = new JPanel(cardLayout);
         
         introPanel = new IntroPanel(this);
-        gamePanel = new GamePanel(this);
+        gamePanel = new GamePanel(this, persistence);
         aboutPanel = new AboutPanel(this);
         helpPanel = new HelpPanel(this);
         
@@ -44,8 +45,8 @@ public class Gebeta extends JFrame {
     
     public void showPanel(String panelName) {
         cardLayout.show(mainPanel, panelName);
-        if (panelName.equals("GAME")) {
-            gamePanel.resetGame();
+        if (panelName.equals("INTRO")) {
+            introPanel.refreshPersistence();
         }
     }
 
@@ -59,6 +60,25 @@ public class Gebeta extends JFrame {
         gamePanel.startGame(vsComputer, aiDepth);
         cardLayout.show(mainPanel, "GAME");
     }
+
+    /** Restores the last auto-saved game, if its persisted snapshot is valid. */
+    public void resumeGame() {
+        Optional<GamePersistence.SavedGame> saved = persistence.load();
+        if (saved.isEmpty()) {
+            introPanel.refreshPersistence();
+            return;
+        }
+        gamePanel.resumeGame(saved.get());
+        cardLayout.show(mainPanel, "GAME");
+    }
+
+    public boolean hasSavedGame() {
+        return persistence.hasSavedGame();
+    }
+
+    public GamePersistence.Stats stats() {
+        return persistence.stats();
+    }
     
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -66,4 +86,4 @@ public class Gebeta extends JFrame {
             game.setVisible(true);
         });
     }
-} 
+}

@@ -1,8 +1,7 @@
 import './styles.css';
 import { MancalaAI } from './logic/MancalaAI';
 import { MancalaState, type MoveTrace } from './logic/MancalaState';
-
-type GameMode = 'computer' | 'two-player';
+import { GameStorage, type GameMode, type StorageLike } from './persistence/GameStorage';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Missing #app');
@@ -16,10 +15,12 @@ app.innerHTML = `
         <h1 id="landing-title"><span lang="am">ገበጣ</span><strong>GEBETA</strong></h1>
         <p class="intro-copy">Sow with purpose. Capture with foresight. Bring every stone home.</p>
         <div class="landing-actions">
+          <button class="button resume hidden" id="resume-button">Resume saved game <span aria-hidden="true">↗</span></button>
           <button class="button primary" id="computer-button">Play vs Computer</button>
           <button class="button secondary" id="two-player-button">Two Players</button>
           <button class="text-button" id="landing-help-button">How to play <span aria-hidden="true">→</span></button>
         </div>
+        <div class="record" id="record" aria-label="Win statistics"></div>
         <p class="no-install">No download · No account · Plays in your browser</p>
       </div>
     </section>
@@ -126,6 +127,20 @@ const difficultyDialog = required<HTMLDialogElement>('#difficulty-dialog');
 const helpDialog = required<HTMLDialogElement>('#help-dialog');
 const gameOverDialog = required<HTMLDialogElement>('#game-over-dialog');
 
+const memoryValues = new Map<string, string>();
+const memoryStorage: StorageLike = {
+  getItem: (key) => memoryValues.get(key) ?? null,
+  setItem: (key, value) => memoryValues.set(key, value),
+  removeItem: (key) => void memoryValues.delete(key),
+};
+let storageBackend: StorageLike = memoryStorage;
+try {
+  storageBackend = window.localStorage;
+} catch {
+  // Browsers can disable localStorage; the game remains playable for this session.
+}
+const persistence = new GameStorage(storageBackend);
+
 const pitMarkup = (index: number): string =>
   `<button class="pit" data-slot="${index}" type="button" aria-label="Pit ${index}"></button>`;
 topRow.innerHTML = [12, 11, 10, 9, 8, 7].map(pitMarkup).join('');
@@ -141,6 +156,7 @@ let aiThinking = false;
 let muted = false;
 let sequence = 0;
 let lastSlot = -1;
+let resultRecorded = false;
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const pause = (milliseconds: number): Promise<void> =>
@@ -214,6 +230,15 @@ function render(): void {
   });
 }
 
+function renderPersistence(): void {
+  required<HTMLButtonElement>('#resume-button').classList.toggle('hidden', persistence.load() === null);
+  const stats = persistence.stats();
+  required<HTMLElement>('#record').innerHTML = `
+    <span><b>VS AI</b> W ${stats.humanWins} · L ${stats.computerWins} · D ${stats.computerTies}</span>
+    <span><b>LOCAL</b> P1 ${stats.player1Wins} · P2 ${stats.player2Wins} · D ${stats.localTies}</span>
+  `;
+}
+
 function showGame(): void {
   landingScreen.classList.add('hidden');
   gameScreen.classList.remove('hidden');
@@ -226,6 +251,7 @@ function showMenu(): void {
   aiThinking = false;
   gameScreen.classList.add('hidden');
   landingScreen.classList.remove('hidden');
+  renderPersistence();
 }
 
 function resetGame(): void {
@@ -235,7 +261,9 @@ function resetGame(): void {
   animating = false;
   aiThinking = false;
   lastSlot = -1;
+  resultRecorded = false;
   render();
+  saveCurrentGame();
 }
 
 function startGame(selectedMode: GameMode, depth = 0): void {
@@ -244,6 +272,37 @@ function startGame(selectedMode: GameMode, depth = 0): void {
   ai = mode === 'computer' ? new MancalaAI(aiDepth, 1) : null;
   resetGame();
   showGame();
+}
+
+function saveCurrentGame(): void {
+  if (state.isGameOver()) return;
+  persistence.save({
+    board: state.toBoard(),
+    currentPlayer: state.currentPlayer(),
+    mode,
+    aiDepth: mode === 'computer' ? aiDepth : 0,
+  });
+}
+
+function resumeGame(): void {
+  const saved = persistence.load();
+  if (!saved) {
+    renderPersistence();
+    return;
+  }
+  sequence += 1;
+  mode = saved.mode;
+  aiDepth = saved.aiDepth;
+  ai = mode === 'computer' ? new MancalaAI(aiDepth, 1) : null;
+  state = MancalaState.fromBoard(saved.board, saved.currentPlayer);
+  visualBoard = state.toBoard();
+  animating = false;
+  aiThinking = false;
+  resultRecorded = false;
+  lastSlot = -1;
+  render();
+  showGame();
+  if (mode === 'computer' && state.currentPlayer() === 1) void afterMove(sequence);
 }
 
 function playTone(frequency: number, duration = 0.055): void {
@@ -315,11 +374,13 @@ async function makeMove(index: number): Promise<void> {
 
 async function afterMove(run: number): Promise<void> {
   if (state.isGameOver()) {
+    recordCompletedGame();
     playTone(660, 0.18);
     await pause(220);
     if (run === sequence) showGameOver();
     return;
   }
+  saveCurrentGame();
   if (mode !== 'computer' || state.currentPlayer() !== 1 || !ai) return;
 
   aiThinking = true;
@@ -329,6 +390,14 @@ async function afterMove(run: number): Promise<void> {
   const move = ai.chooseMove(state.copy());
   if (run !== sequence || move < 0) return;
   await makeMove(move);
+}
+
+function recordCompletedGame(): void {
+  if (resultRecorded) return;
+  resultRecorded = true;
+  persistence.recordResult(mode, state.scoreOf(0), state.scoreOf(1));
+  persistence.clearSavedGame();
+  renderPersistence();
 }
 
 function showGameOver(): void {
@@ -348,6 +417,7 @@ boardElement.addEventListener('click', (event) => {
 });
 
 required<HTMLButtonElement>('#computer-button').addEventListener('click', () => difficultyDialog.showModal());
+required<HTMLButtonElement>('#resume-button').addEventListener('click', resumeGame);
 required<HTMLButtonElement>('#two-player-button').addEventListener('click', () => startGame('two-player'));
 required<HTMLButtonElement>('#landing-help-button').addEventListener('click', () => helpDialog.showModal());
 required<HTMLButtonElement>('#help-button').addEventListener('click', () => helpDialog.showModal());
@@ -373,3 +443,4 @@ gameOverDialog.addEventListener('close', () => {
 });
 
 render();
+renderPersistence();

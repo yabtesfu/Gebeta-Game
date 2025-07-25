@@ -9,6 +9,7 @@ public class GamePanel extends JPanel {
     private JButton newGameButton;
     private JButton helpButton;
     private JButton soundButton;
+    private final GamePersistence persistence;
 
     // Game mode. The AI, when present, always plays as Player 1 (the top row);
     // the human is Player 0 and moves first.
@@ -24,14 +25,22 @@ public class GamePanel extends JPanel {
     private static final int MOVE_START_DELAY_MS = 220;
     private static final int AI_THINK_DELAY_MS = 320;
     private Timer sowTimer;
+    private Timer thinkTimer;
     private boolean animating;
+    private boolean resultRecorded;
 
-    public GamePanel(Gebeta parent) {
+    public GamePanel(Gebeta parent, GamePersistence persistence) {
         this.parent = parent;
+        this.persistence = persistence;
         this.gameBoard = new GameBoard();
         setLayout(new BorderLayout());
         setOpaque(true);
         setupComponents();
+    }
+
+    /** Retained for developer preview tools. The application injects its shared store. */
+    public GamePanel(Gebeta parent) {
+        this(parent, GamePersistence.transientPersistence());
     }
 
     @Override
@@ -69,10 +78,7 @@ public class GamePanel extends JPanel {
         newGameButton = ThemedButton.primary("New Game");
         newGameButton.setPreferredSize(new Dimension(150, 44));
         newGameButton.addActionListener(e -> {
-            stopAnimation();
-            aiThinking = false;
-            gameBoard.resetGame();
-            repaint();
+            startFreshGame();
         });
         buttons.add(newGameButton);
 
@@ -201,10 +207,14 @@ public class GamePanel extends JPanel {
     /** Called once a move's animation completes: end the game or hand off to the AI. */
     private void afterMove() {
         if (gameBoard.isGameOver()) {
+            recordCompletedGame();
             SoundPlayer.playGameOver();
             showGameOverDialog();
-        } else if (vsComputer && gameBoard.getCurrentPlayer() == AI_PLAYER) {
-            triggerAiTurn();
+        } else {
+            persistCurrentGame();
+            if (vsComputer && gameBoard.getCurrentPlayer() == AI_PLAYER) {
+                triggerAiTurn();
+            }
         }
     }
 
@@ -220,9 +230,10 @@ public class GamePanel extends JPanel {
         aiThinking = true;
         repaint();
 
-        Timer think = new Timer(AI_THINK_DELAY_MS, null);
-        think.setRepeats(false);
-        think.addActionListener(e -> {
+        thinkTimer = new Timer(AI_THINK_DELAY_MS, null);
+        thinkTimer.setRepeats(false);
+        thinkTimer.addActionListener(e -> {
+            thinkTimer = null;
             int move = ai.chooseMove(gameBoard.getStateCopy());
             aiThinking = false;
             if (move < 0) {
@@ -236,7 +247,7 @@ public class GamePanel extends JPanel {
             }
             animateMove(trace, this::afterMove);
         });
-        think.start();
+        thinkTimer.start();
     }
 
     private void stopAnimation() {
@@ -244,6 +255,11 @@ public class GamePanel extends JPanel {
             sowTimer.stop();
             sowTimer = null;
         }
+        if (thinkTimer != null) {
+            thinkTimer.stop();
+            thinkTimer = null;
+        }
+        aiThinking = false;
         animating = false;
         gameBoard.setAnimating(false);
     }
@@ -257,8 +273,7 @@ public class GamePanel extends JPanel {
             "Close"
         );
         if (again) {
-            gameBoard.resetGame();
-            repaint();
+            startFreshGame();
         }
     }
 
@@ -390,17 +405,48 @@ public class GamePanel extends JPanel {
         this.aiDepth = aiDepth;
         this.ai = vsComputer ? new MancalaAI(aiDepth, AI_PLAYER) : null;
         this.aiThinking = false;
+        this.resultRecorded = false;
         gameBoard.setPlayerLabels(vsComputer ? "You" : "Player 1",
                 vsComputer ? "Computer" : "Player 2");
         gameBoard.resetGame();
+        persistCurrentGame();
         repaint();
     }
 
-    public void resetGame() {
+    private void startFreshGame() {
         stopAnimation();
-        aiThinking = false;
+        resultRecorded = false;
         gameBoard.resetGame();
+        persistCurrentGame();
         repaint();
+    }
+
+    /** Loads a validated snapshot and continues the AI turn when necessary. */
+    public void resumeGame(GamePersistence.SavedGame saved) {
+        stopAnimation();
+        this.vsComputer = saved.vsComputer();
+        this.aiDepth = saved.aiDepth();
+        this.ai = vsComputer ? new MancalaAI(aiDepth, AI_PLAYER) : null;
+        this.resultRecorded = false;
+        gameBoard.setPlayerLabels(vsComputer ? "You" : "Player 1",
+                vsComputer ? "Computer" : "Player 2");
+        gameBoard.restoreGame(saved.board(), saved.currentPlayer());
+        repaint();
+        if (vsComputer && gameBoard.getCurrentPlayer() == AI_PLAYER) {
+            SwingUtilities.invokeLater(this::triggerAiTurn);
+        }
+    }
+
+    private void persistCurrentGame() {
+        persistence.save(gameBoard.getStateCopy(), vsComputer, aiDepth);
+    }
+
+    private void recordCompletedGame() {
+        if (resultRecorded) return;
+        resultRecorded = true;
+        MancalaState state = gameBoard.getStateCopy();
+        persistence.recordResult(vsComputer, state.scoreOf(0), state.scoreOf(1));
+        persistence.clearSavedGame();
     }
 
     @Override

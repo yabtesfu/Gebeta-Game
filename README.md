@@ -73,6 +73,10 @@ workflow and publishes both Apple-silicon and Intel DMGs to that GitHub Release.
 - **Traditional Gebeta Rules:** Complete implementation of the classic Gebeta game mechanics
 - **Playable from a link:** A responsive TypeScript edition runs directly in the browser
   and deploys automatically to GitHub Pages.
+- **Save and resume:** Both editions automatically checkpoint completed moves. Reopen the
+  app or browser later and continue from the exact board and player turn.
+- **Persistent records:** Versus-computer wins, losses, and draws—and local Player 1 / Player 2
+  results—remain available between sessions.
 - **Two game modes:**
   - **Two Players** — local hotseat play
   - **Play vs Computer** — an AI opponent with **Easy / Medium / Hard** difficulty
@@ -183,11 +187,14 @@ build.gradle         # Gradle build configuration
   imports, which is what makes it testable and lets the AI simulate positions freely.
 - `MancalaAI.java` - Computer opponent using minimax with alpha-beta pruning.
 - `MancalaStateTest.java` - JUnit 5 unit tests for the rules engine.
+- `GamePersistence.java` - Versioned desktop save slot and win records backed by Java Preferences.
+- `GamePersistenceTest.java` - In-memory tests for round trips, corruption recovery, and statistics.
 - `web/src/logic/` - TypeScript ports of the same rules and minimax AI, backed by a
   matching browser-side parity suite.
 
 **Web app:**
 - `web/src/main.ts` - Browser game flow, move animation, difficulty selection, and UI state.
+- `web/src/persistence/` - Defensive, versioned `localStorage` save and statistics handling.
 - `web/src/styles.css` - Responsive coffee-and-gold board presentation for mobile and desktop.
 - `.github/workflows/pages.yml` - Tests, builds, and publishes the game to GitHub Pages.
 
