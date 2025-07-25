@@ -26,6 +26,10 @@
 .gradle/
 build/
 
+# TypeScript web build output and installed dependencies
+node_modules/
+web/dist/
+
 # Virtual machine crash logs
 hs_err_pid*
 
@@ -41,4 +45,4 @@ hs_err_pid*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db

@@ -4,6 +4,8 @@
 
 A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancala), featuring an AI opponent (minimax with alpha-beta pruning), a fully unit-tested rules engine, and a Gradle build with continuous integration. The interface is themed around Habesha (Ethiopian) culture — warm coffee-and-gold tones over a backdrop of elders playing gebeta.
 
+**[Play Gebeta in your browser](https://yabtesfu.github.io/Gebeta-Game/)** — no download or account required.
+
 ![Gameplay demo — animated stone sowing](docs/demo.gif)
 
 > The board above is rendered directly from the game's own drawing code (see
@@ -15,6 +17,13 @@ A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancal
 | ![Main menu](docs/screenshot-intro.png) | ![Game screen](docs/screenshot-game.png) |
 
 ## Download & Play
+
+### Play online
+
+Open the **[live web game](https://yabtesfu.github.io/Gebeta-Game/)** on a phone,
+tablet, or desktop browser. It includes two-player mode, three AI difficulties,
+animated sowing and captures, sound, responsive controls, and the same rules as the
+tested Java engine.
 
 ### macOS app (no Java required)
 
@@ -62,6 +71,8 @@ workflow and publishes both Apple-silicon and Intel DMGs to that GitHub Release.
 ## Game Features
 
 - **Traditional Gebeta Rules:** Complete implementation of the classic Gebeta game mechanics
+- **Playable from a link:** A responsive TypeScript edition runs directly in the browser
+  and deploys automatically to GitHub Pages.
 - **Two game modes:**
   - **Two Players** — local hotseat play
   - **Play vs Computer** — an AI opponent with **Easy / Medium / Hard** difficulty
@@ -100,6 +111,21 @@ installed — only a JDK (17 or newer).
 ```bash
 ./gradlew test
 ```
+
+### Run the web game
+
+The browser edition requires Node.js 20 or newer:
+
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+Use `npm test` for the TypeScript rules parity suite and `npm run build` for the
+production site. Before the first deployment, open the repository's **Settings →
+Pages** and set **Source** to **GitHub Actions**. After that, pushes to `main` that
+touch the web app deploy automatically.
 
 ### Build everything (compile + test + package)
 
@@ -145,6 +171,9 @@ src/
     resources/       # background.png (loaded from the classpath)
   test/
     java/            # JUnit 5 tests
+web/
+  src/               # TypeScript rules, AI, browser UI, and parity tests
+  package.json       # Vite development and production scripts
 build.gradle         # Gradle build configuration
 .github/workflows/   # GitHub Actions CI
 ```
@@ -154,6 +183,13 @@ build.gradle         # Gradle build configuration
   imports, which is what makes it testable and lets the AI simulate positions freely.
 - `MancalaAI.java` - Computer opponent using minimax with alpha-beta pruning.
 - `MancalaStateTest.java` - JUnit 5 unit tests for the rules engine.
+- `web/src/logic/` - TypeScript ports of the same rules and minimax AI, backed by a
+  matching browser-side parity suite.
+
+**Web app:**
+- `web/src/main.ts` - Browser game flow, move animation, difficulty selection, and UI state.
+- `web/src/styles.css` - Responsive coffee-and-gold board presentation for mobile and desktop.
+- `.github/workflows/pages.yml` - Tests, builds, and publishes the game to GitHub Pages.
 
 **Theme & presentation:**
 - `Theme.java` - Central Habesha palette, fonts, and shared paint helpers (cards, dividers).
