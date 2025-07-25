@@ -3,6 +3,8 @@ plugins {
     id 'application'
 }
 
+version = '1.0.0'
+
 repositories {
     mavenCentral()
 }
@@ -41,4 +43,62 @@ tasks.named('test') {
     testLogging {
         events 'passed', 'skipped', 'failed'
     }
+}
+
+// jpackage ships with the JDK and creates a native macOS application containing
+// its own trimmed Java runtime. Players therefore do not need Java installed.
+def jpackageExecutable = file("${System.getProperty('java.home')}/bin/jpackage")
+def nativeOutputDirectory = layout.buildDirectory.dir('jpackage')
+
+def configureMacPackage = { task, String packageType, String outputFolder ->
+    task.dependsOn tasks.named('jar')
+    task.group = 'distribution'
+    task.inputs.file(tasks.named('jar').flatMap { it.archiveFile })
+    task.outputs.dir(nativeOutputDirectory.map { it.dir(outputFolder) })
+
+    task.doFirst {
+        if (!System.getProperty('os.name').toLowerCase().contains('mac')) {
+            throw new GradleException("${task.name} must run on macOS")
+        }
+        if (!jpackageExecutable.isFile()) {
+            throw new GradleException('jpackage was not found. Run this task with JDK 17 or newer.')
+        }
+
+        def destination = nativeOutputDirectory.get().dir(outputFolder).asFile
+        delete destination
+        destination.mkdirs()
+
+        task.commandLine(
+            jpackageExecutable,
+            '--type', packageType,
+            '--name', 'Gebeta',
+            '--app-version', project.version.toString(),
+            '--vendor', 'Yabetse Tesfaye',
+            '--description', 'Traditional Ethiopian Gebeta board game',
+            '--copyright', 'Copyright (c) Yabetse Tesfaye',
+            '--input', layout.buildDirectory.dir('libs').get().asFile,
+            '--main-jar', tasks.named('jar').get().archiveFileName.get(),
+            '--main-class', application.mainClass.get(),
+            '--dest', destination,
+            '--java-options', '-Dfile.encoding=UTF-8',
+            '--mac-package-identifier', 'com.yabtesfu.gebeta',
+            '--mac-package-name', 'Gebeta'
+        )
+    }
+}
+
+tasks.register('packageAppImage', Exec) { task ->
+    description = 'Builds build/jpackage/app/Gebeta.app with a bundled Java runtime.'
+    configureMacPackage(task, 'app-image', 'app')
+}
+
+tasks.register('packageDmg', Exec) { task ->
+    description = 'Builds a drag-and-drop macOS DMG with a bundled Java runtime.'
+    configureMacPackage(task, 'dmg', 'installer')
+}
+
+tasks.register('packageNative') {
+    group = 'distribution'
+    description = 'Builds both the macOS .app and .dmg distributions.'
+    dependsOn tasks.named('packageAppImage'), tasks.named('packageDmg')
 }

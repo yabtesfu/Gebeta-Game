@@ -16,6 +16,21 @@ A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancal
 
 ## Download & Play
 
+### macOS app (no Java required)
+
+Download the DMG for your Mac from the
+[latest GitHub release](https://github.com/yabtesfu/Gebeta-Game/releases/latest):
+
+- `arm64` for Apple-silicon Macs (M1, M2, M3, and newer)
+- `x64` for Intel Macs
+
+Open the DMG, drag **Gebeta** into **Applications**, and launch it. The app includes
+its own Java runtime, so players do not need to install a JDK. Because the current
+release is not Apple-notarized, macOS may require a right-click followed by **Open**
+the first time.
+
+### Build from source
+
 Build a self-contained, runnable jar and launch it — no IDE required, just a JDK:
 
 ```bash
@@ -24,6 +39,17 @@ java -jar build/libs/gebeta.jar
 ```
 
 Or run it straight from source with `./gradlew run`.
+
+On macOS, build a native app and DMG locally with JDK 17 or newer:
+
+```bash
+./gradlew packageNative
+open build/jpackage/installer/Gebeta-1.0.0.dmg
+```
+
+The output contains `build/jpackage/app/Gebeta.app` and the installer in
+`build/jpackage/installer/`. Pushing a tag such as `v1.0.0` runs the native release
+workflow and publishes both Apple-silicon and Intel DMGs to that GitHub Release.
 
 ## About the Developer
 

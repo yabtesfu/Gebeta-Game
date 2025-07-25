@@ -1,0 +1,78 @@
+name: Native macOS Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package ${{ matrix.arch }} DMG
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+            java-arch: aarch64
+          - runner: macos-15-intel
+            arch: x64
+            java-arch: x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          architecture: ${{ matrix.java-arch }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Test and package
+        run: ./gradlew test packageDmg --no-daemon
+
+      - name: Add architecture to filename
+        shell: bash
+        run: |
+          dmg="$(find build/jpackage/installer -name 'Gebeta-*.dmg' -print -quit)"
+          mv "${dmg}" "${dmg%.dmg}-macos-${{ matrix.arch }}.dmg"
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: gebeta-macos-${{ matrix.arch }}
+          path: build/jpackage/installer/*.dmg
+          if-no-files-found: error
+
+  release:
+    name: Attach installers to GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packaged DMGs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: gebeta-macos-*
+          path: installers
+          merge-multiple: true
+
+      - name: Create release and attach installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" installers/*.dmg --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" installers/*.dmg --generate-notes --title "Gebeta ${GITHUB_REF_NAME}"
+          fi
