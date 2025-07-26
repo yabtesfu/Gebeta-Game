@@ -10,6 +10,7 @@ app.innerHTML = `
   <main class="app-shell">
     <section class="landing screen" id="landing-screen" aria-labelledby="landing-title">
       <div class="landing-card">
+        <img class="brand-logo" src="./logo.svg" alt="Gebeta logo" width="72" height="72" style="display:block;margin:0 auto 14px;" />
         <div class="flag-mark" aria-hidden="true"><i></i><i></i><i></i></div>
         <p class="eyebrow">A traditional Ethiopian strategy game</p>
         <h1 id="landing-title"><span lang="am">ገበጣ</span><strong>GEBETA</strong></h1>
@@ -27,9 +28,12 @@ app.innerHTML = `
 
     <section class="game screen hidden" id="game-screen" aria-labelledby="game-title">
       <header class="game-header">
-        <div class="brand-lockup">
-          <h1 id="game-title"><span lang="am">ገበጣ</span> Gebeta</h1>
-          <p>Sow counterclockwise</p>
+        <div class="brand-lockup" style="display:flex;align-items:center;gap:12px;">
+          <img class="brand-logo" src="./logo.svg" alt="" width="40" height="40" style="display:block;flex:none;" />
+          <div>
+            <h1 id="game-title"><span lang="am">ገበጣ</span> Gebeta</h1>
+            <p>Sow counterclockwise</p>
+          </div>
         </div>
         <nav class="game-actions" aria-label="Game controls">
           <button class="small-button" id="new-game-button">New game</button>
