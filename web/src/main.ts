@@ -10,11 +10,10 @@ app.innerHTML = `
   <main class="app-shell">
     <section class="landing screen" id="landing-screen" aria-labelledby="landing-title">
       <div class="landing-card">
-        <img class="brand-logo" src="./logo.svg" alt="Gebeta logo" width="72" height="72" style="display:block;margin:0 auto 14px;" />
+        <img class="brand-logo" src="./logo.svg" alt="Gebeta logo" width="88" height="88" style="display:block;margin:0 auto 20px;" />
         <div class="flag-mark" aria-hidden="true"><i></i><i></i><i></i></div>
         <p class="eyebrow">A traditional Ethiopian strategy game</p>
         <h1 id="landing-title"><span lang="am">ገበጣ</span><strong>GEBETA</strong></h1>
-        <p class="intro-copy">Sow with purpose. Capture with foresight. Bring every stone home.</p>
         <div class="landing-actions">
           <button class="button resume hidden" id="resume-button">Resume saved game <span aria-hidden="true">↗</span></button>
           <button class="button primary" id="computer-button">Play vs Computer</button>

@@ -58,11 +58,11 @@ button:focus-visible { outline: 3px solid #f4c430; outline-offset: 3px; }
 .flag-mark i:nth-child(3) { background: #ce202b; }
 
 .eyebrow {
-  margin: 0 0 14px;
+  margin: 0 0 18px;
   color: var(--gold);
-  font-size: .72rem;
+  font-size: .8rem;
   font-weight: 700;
-  letter-spacing: .18em;
+  letter-spacing: .2em;
   text-transform: uppercase;
 }
 
@@ -71,20 +71,19 @@ button:focus-visible { outline: 3px solid #f4c430; outline-offset: 3px; }
   display: block;
   color: var(--gold-light);
   font-family: Georgia, serif;
-  font-size: clamp(4.3rem, 15vw, 7.4rem);
+  font-size: clamp(4.8rem, 16vw, 8.4rem);
   text-shadow: 0 5px 30px rgba(229, 180, 90, .18);
 }
 .landing h1 strong {
   display: block;
-  margin-top: 25px;
+  margin-top: 28px;
   color: white;
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(2.8rem, 10vw, 4.8rem);
-  letter-spacing: .13em;
+  font-size: clamp(3rem, 10.5vw, 5.3rem);
+  letter-spacing: .14em;
 }
 
-.intro-copy { max-width: 410px; margin: 25px auto 30px; color: var(--parchment); line-height: 1.7; }
-.landing-actions { display: grid; gap: 12px; }
+.landing-actions { display: grid; gap: 14px; margin-top: 44px; }
 
 .button, .small-button, .text-button, .difficulty, .close-button {
   border: 0;
@@ -92,10 +91,11 @@ button:focus-visible { outline: 3px solid #f4c430; outline-offset: 3px; }
 }
 
 .button {
-  min-height: 52px;
-  padding: 13px 25px;
+  min-height: 58px;
+  padding: 16px 26px;
   border-radius: 14px;
   font-weight: 700;
+  font-size: 1.06rem;
   transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .button:hover { transform: translateY(-2px); }
@@ -104,9 +104,9 @@ button:focus-visible { outline: 3px solid #f4c430; outline-offset: 3px; }
 .button.resume { display: flex; justify-content: space-between; color: #eaf7ee; border: 1px solid rgba(76, 169, 108, .7); background: linear-gradient(135deg, rgba(47, 125, 79, .9), rgba(28, 84, 52, .9)); box-shadow: 0 9px 25px rgba(47, 125, 79, .2); }
 .text-button { padding: 10px; color: var(--parchment); background: transparent; }
 .text-button:hover { color: var(--gold); }
-.record { display: flex; justify-content: center; flex-wrap: wrap; gap: 7px 18px; margin-top: 21px; color: #9f8464; font-size: .68rem; }
-.record b { margin-right: 4px; color: var(--gold); font-size: .6rem; letter-spacing: .08em; }
-.no-install { margin: 13px 0 0; color: #866d50; font-size: .72rem; }
+.record { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 18px; margin-top: 28px; color: #9f8464; font-size: .72rem; }
+.record b { margin-right: 4px; color: var(--gold); font-size: .62rem; letter-spacing: .08em; }
+.no-install { margin: 18px 0 0; color: #866d50; font-size: .76rem; }
 
 .game { display: flex; flex-direction: column; background: linear-gradient(rgba(24, 15, 10, .65), rgba(24, 15, 10, .9)); }
 .game-header {
