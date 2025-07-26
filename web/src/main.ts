@@ -150,13 +150,16 @@ let state = new MancalaState();
 let visualBoard = state.toBoard();
 let mode: GameMode = 'computer';
 let aiDepth = 5;
-let ai: MancalaAI | null = new MancalaAI(aiDepth, 1);
 let animating = false;
 let aiThinking = false;
 let muted = false;
 let sequence = 0;
 let lastSlot = -1;
 let resultRecorded = false;
+let movingPlayer: number | null = null;
+let activeAiWorker: Worker | null = null;
+let activeAiResolver: ((move: number) => void) | null = null;
+let aiRequestId = 0;
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const pause = (milliseconds: number): Promise<void> =>
@@ -181,6 +184,7 @@ function stoneMarkup(count: number, slot: number): string {
 
 function statusText(): string {
   if (state.isGameOver()) return 'Game over';
+  if (animating) return mode === 'computer' && movingPlayer === 1 ? 'Computer is moving…' : 'Sowing stones…';
   if (aiThinking) return 'Computer is thinking…';
   if (mode === 'computer') return state.currentPlayer() === 0 ? 'Your turn' : "Computer's turn";
   return `${playerName(state.currentPlayer())}'s turn`;
@@ -209,6 +213,7 @@ function render(): void {
   statusElement.classList.toggle('thinking', aiThinking);
 
   if (state.isGameOver()) boardTip.textContent = 'All stones are home. Check the final score.';
+  else if (animating) boardTip.textContent = 'One stone at a time, counterclockwise.';
   else if (aiThinking) boardTip.textContent = 'The computer is weighing its options.';
   else if (mode === 'computer' && state.currentPlayer() === 1) boardTip.textContent = 'The computer has the board.';
   else boardTip.textContent = 'Pick any glowing pit on your side.';
@@ -247,7 +252,9 @@ function showGame(): void {
 
 function showMenu(): void {
   sequence += 1;
+  cancelAiSearch();
   animating = false;
+  movingPlayer = null;
   aiThinking = false;
   gameScreen.classList.add('hidden');
   landingScreen.classList.remove('hidden');
@@ -256,11 +263,13 @@ function showMenu(): void {
 
 function resetGame(): void {
   sequence += 1;
+  cancelAiSearch();
   state = new MancalaState();
   visualBoard = state.toBoard();
   animating = false;
   aiThinking = false;
   lastSlot = -1;
+  movingPlayer = null;
   resultRecorded = false;
   render();
   saveCurrentGame();
@@ -269,7 +278,6 @@ function resetGame(): void {
 function startGame(selectedMode: GameMode, depth = 0): void {
   mode = selectedMode;
   aiDepth = depth;
-  ai = mode === 'computer' ? new MancalaAI(aiDepth, 1) : null;
   resetGame();
   showGame();
 }
@@ -293,16 +301,58 @@ function resumeGame(): void {
   sequence += 1;
   mode = saved.mode;
   aiDepth = saved.aiDepth;
-  ai = mode === 'computer' ? new MancalaAI(aiDepth, 1) : null;
+  cancelAiSearch();
   state = MancalaState.fromBoard(saved.board, saved.currentPlayer);
   visualBoard = state.toBoard();
   animating = false;
   aiThinking = false;
   resultRecorded = false;
   lastSlot = -1;
+  movingPlayer = null;
   render();
   showGame();
   if (mode === 'computer' && state.currentPlayer() === 1) void afterMove(sequence);
+}
+
+function cancelAiSearch(): void {
+  activeAiWorker?.terminate();
+  activeAiWorker = null;
+  activeAiResolver?.(-1);
+  activeAiResolver = null;
+}
+
+function searchAiMove(snapshot: MancalaState, maxDepth: number): Promise<number> {
+  cancelAiSearch();
+  const requestId = ++aiRequestId;
+  try {
+    const worker = new Worker(new URL('./ai.worker.ts', import.meta.url), { type: 'module' });
+    activeAiWorker = worker;
+    return new Promise((resolve) => {
+      activeAiResolver = resolve;
+      const finish = (move: number): void => {
+        if (activeAiWorker === worker) activeAiWorker = null;
+        if (activeAiResolver === resolve) activeAiResolver = null;
+        worker.terminate();
+        resolve(move);
+      };
+      worker.onmessage = (event: MessageEvent<{ requestId: number; move: number }>) => {
+        if (activeAiWorker === worker && event.data.requestId === requestId) finish(event.data.move);
+      };
+      worker.onerror = () => {
+        // Very old/restricted browsers still get a correct synchronous fallback.
+        if (activeAiWorker === worker) finish(new MancalaAI(maxDepth, 1).chooseMove(snapshot));
+      };
+      worker.postMessage({
+        requestId,
+        board: snapshot.toBoard(),
+        currentPlayer: snapshot.currentPlayer(),
+        maxDepth,
+        aiPlayer: 1,
+      });
+    });
+  } catch {
+    return Promise.resolve(new MancalaAI(maxDepth, 1).chooseMove(snapshot));
+  }
 }
 
 function playTone(frequency: number, duration = 0.055): void {
@@ -357,9 +407,11 @@ async function animateTrace(trace: MoveTrace, before: number[], run: number): Pr
 
 async function makeMove(index: number): Promise<void> {
   if (!canHumanPlay(index) && !(mode === 'computer' && state.currentPlayer() === 1 && aiThinking)) return;
+  const mover = state.currentPlayer();
   const before = state.toBoard();
   const trace = state.applyMoveTraced(index);
   if (!trace) return;
+  movingPlayer = mover;
 
   const run = sequence;
   animating = true;
@@ -368,6 +420,7 @@ async function makeMove(index: number): Promise<void> {
   const completed = await animateTrace(trace, before, run);
   if (!completed || run !== sequence) return;
   animating = false;
+  movingPlayer = null;
   render();
   await afterMove(run);
 }
@@ -381,14 +434,19 @@ async function afterMove(run: number): Promise<void> {
     return;
   }
   saveCurrentGame();
-  if (mode !== 'computer' || state.currentPlayer() !== 1 || !ai) return;
+  if (mode !== 'computer' || state.currentPlayer() !== 1) return;
 
   aiThinking = true;
   render();
   await pause(420);
   if (run !== sequence) return;
-  const move = ai.chooseMove(state.copy());
-  if (run !== sequence || move < 0) return;
+  const move = await searchAiMove(state.copy(), aiDepth);
+  if (run !== sequence) return;
+  if (move < 0) {
+    aiThinking = false;
+    render();
+    return;
+  }
   await makeMove(move);
 }
 

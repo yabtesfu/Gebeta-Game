@@ -243,6 +243,19 @@ The game ends when:
 
 ## Performance Considerations
 
+### AI Search
+
+- **Iterative deepening** searches depth 1, then 2, and so on, retaining the move from
+  the last fully completed iteration when the think-time deadline arrives.
+- **Alpha-beta pruning** avoids branches that cannot change the selected move.
+- **Transposition tables** cache exact scores and lower/upper bounds for positions reached
+  through different move orders; deeper entries are never replaced by shallower ones.
+- **Move ordering** prioritizes the previous principal move, extra turns, captures, and
+  immediate store gains so useful cutoffs happen earlier.
+- **Bounded memory** caps each search table at 250,000 positions.
+- **Responsive execution** uses a cancellable Swing worker on desktop and a module Web
+  Worker in the browser. New Game, Menu, and Resume cancel stale searches.
+
 ### Rendering Optimization
 
 - **Antialiasing** enabled for smooth graphics
@@ -259,13 +272,9 @@ The game ends when:
 
 ### Potential Features
 
-1. **AI opponent** with varying difficulty levels
-2. **Move history** and replay functionality
-3. **Statistics tracking** (win rates, average scores)
-4. **Customizable rules** (different stone counts, capture variations)
-5. **Multiplayer support** over network
-6. **Sound effects** and animations
-7. **Save/load game states**
+1. **Move history** and replay functionality
+2. **Customizable rules** (different stone counts, capture variations)
+3. **Multiplayer support** over network
 
 ### Technical Improvements
 

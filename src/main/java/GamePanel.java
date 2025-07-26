@@ -19,13 +19,15 @@ public class GamePanel extends JPanel {
     private MancalaAI ai;
     private boolean aiThinking;
 
-    // Animation. Everything runs on the Swing event thread: a Timer sows one stone
-    // per tick, so the UI never blocks and clicks are simply ignored while it plays.
+    // Animation uses the Swing event thread; AI search runs in a cancellable worker so
+    // painting, sound, navigation and window controls stay responsive on Hard mode.
     private static final int SOW_INTERVAL_MS = 170;
     private static final int MOVE_START_DELAY_MS = 220;
     private static final int AI_THINK_DELAY_MS = 320;
     private Timer sowTimer;
     private Timer thinkTimer;
+    private SwingWorker<Integer, Void> aiWorker;
+    private int aiSearchGeneration;
     private boolean animating;
     private boolean resultRecorded;
 
@@ -220,8 +222,8 @@ public class GamePanel extends JPanel {
 
     /**
      * Has the computer choose and play a move. After a short "thinking" pause it picks
-     * a move, then animates it; {@link #afterMove()} re-enters here so the AI keeps
-     * playing while it holds extra turns. All of this stays on the event thread.
+     * a move on a worker thread, then animates it; {@link #afterMove()} re-enters here
+     * so the AI keeps playing while it holds extra turns.
      */
     private void triggerAiTurn() {
         if (ai == null) {
@@ -230,27 +232,50 @@ public class GamePanel extends JPanel {
         aiThinking = true;
         repaint();
 
+        MancalaState snapshot = gameBoard.getStateCopy();
+        int generation = ++aiSearchGeneration;
+
         thinkTimer = new Timer(AI_THINK_DELAY_MS, null);
         thinkTimer.setRepeats(false);
         thinkTimer.addActionListener(e -> {
             thinkTimer = null;
-            int move = ai.chooseMove(gameBoard.getStateCopy());
-            aiThinking = false;
-            if (move < 0) {
-                repaint();
-                return;
-            }
-            MoveTrace trace = gameBoard.makeMove(move);
-            if (trace == null) {
-                repaint();
-                return;
-            }
-            animateMove(trace, this::afterMove);
+            if (generation != aiSearchGeneration) return;
+            aiWorker = new SwingWorker<>() {
+                @Override
+                protected Integer doInBackground() {
+                    return ai.chooseMove(snapshot);
+                }
+
+                @Override
+                protected void done() {
+                    if (generation != aiSearchGeneration || isCancelled()) return;
+                    aiWorker = null;
+                    aiThinking = false;
+                    try {
+                        int move = get();
+                        if (move < 0 || gameBoard.isGameOver()
+                                || gameBoard.getCurrentPlayer() != AI_PLAYER) {
+                            repaint();
+                            return;
+                        }
+                        MoveTrace trace = gameBoard.makeMove(move);
+                        if (trace == null) {
+                            repaint();
+                            return;
+                        }
+                        animateMove(trace, GamePanel.this::afterMove);
+                    } catch (Exception searchFailedOrCancelled) {
+                        repaint();
+                    }
+                }
+            };
+            aiWorker.execute();
         });
         thinkTimer.start();
     }
 
     private void stopAnimation() {
+        aiSearchGeneration++;
         if (sowTimer != null) {
             sowTimer.stop();
             sowTimer = null;
@@ -258,6 +283,10 @@ public class GamePanel extends JPanel {
         if (thinkTimer != null) {
             thinkTimer.stop();
             thinkTimer = null;
+        }
+        if (aiWorker != null) {
+            aiWorker.cancel(true);
+            aiWorker = null;
         }
         aiThinking = false;
         animating = false;

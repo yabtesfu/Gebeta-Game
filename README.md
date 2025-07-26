@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/yabtesfu/Gebeta-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/yabtesfu/Gebeta-Game/actions/workflows/ci.yml)
 
-A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancala), featuring an AI opponent (minimax with alpha-beta pruning), a fully unit-tested rules engine, and a Gradle build with continuous integration. The interface is themed around Habesha (Ethiopian) culture — warm coffee-and-gold tones over a backdrop of elders playing gebeta.
+A Java GUI implementation of the traditional Ethiopian board game Gebeta (Mancala), featuring an AI opponent with time-bounded iterative deepening, a fully unit-tested rules engine, and a Gradle build with continuous integration. The interface is themed around Habesha (Ethiopian) culture — warm coffee-and-gold tones over a backdrop of elders playing gebeta.
 
 **[Play Gebeta in your browser](https://yabtesfu.github.io/Gebeta-Game/)** — no download or account required.
 
@@ -80,10 +80,11 @@ workflow and publishes both Apple-silicon and Intel DMGs to that GitHub Release.
 - **Two game modes:**
   - **Two Players** — local hotseat play
   - **Play vs Computer** — an AI opponent with **Easy / Medium / Hard** difficulty
-- **AI opponent:** A computer player built on the **minimax algorithm with alpha-beta pruning**.
-  It looks several moves ahead, correctly handles Gebeta's "extra turn" rule, and gets
-  stronger as difficulty increases (search depth 1 → 5 → 9). The AI runs on a background
-  thread so the interface stays responsive.
+- **Stronger AI opponent:** Time-bounded iterative deepening builds on minimax with
+  alpha-beta pruning, transposition-table bounds, principal-move ordering, and tactical
+  capture / extra-turn ordering. Difficulty controls the maximum depth and think budget.
+  Desktop search runs in a cancellable Swing worker and browser search in a Web Worker,
+  keeping navigation and animation responsive even on Hard.
 - **Habesha-themed UI:** A cohesive traditional Ethiopian look — coffee-and-gold palette,
   a carved wooden board, coffee-bean stones, and a warm photographic backdrop of elders
   playing gebeta. Drop extra photos named `background1.png`, `background2.png`, … into
@@ -185,7 +186,10 @@ build.gradle         # Gradle build configuration
 **Rules & AI (pure logic, no UI dependency):**
 - `MancalaState.java` - The complete game rules as a plain `int[14]` board. No Swing
   imports, which is what makes it testable and lets the AI simulate positions freely.
-- `MancalaAI.java` - Computer opponent using minimax with alpha-beta pruning.
+- `MancalaAI.java` - Iterative-deepening opponent with alpha-beta search, transposition
+  caching, move ordering, deadlines, cancellation, and per-search diagnostics.
+- `MancalaAITest.java` - Verifies legal deterministic play, completed iterations,
+  transposition hits, pruning, and deadline fallback.
 - `MancalaStateTest.java` - JUnit 5 unit tests for the rules engine.
 - `GamePersistence.java` - Versioned desktop save slot and win records backed by Java Preferences.
 - `GamePersistenceTest.java` - In-memory tests for round trips, corruption recovery, and statistics.
@@ -194,6 +198,7 @@ build.gradle         # Gradle build configuration
 
 **Web app:**
 - `web/src/main.ts` - Browser game flow, move animation, difficulty selection, and UI state.
+- `web/src/ai.worker.ts` - Runs the time-bounded TypeScript AI away from the browser UI thread.
 - `web/src/persistence/` - Defensive, versioned `localStorage` save and statistics handling.
 - `web/src/styles.css` - Responsive coffee-and-gold board presentation for mobile and desktop.
 - `.github/workflows/pages.yml` - Tests, builds, and publishes the game to GitHub Pages.
